@@ -43,7 +43,7 @@ export default function Sidebar({ onSync, syncing, counts = {} }) {
         <div className="sidebar-logo">
           <div className="logo-mark">
             <div className="logo-icon" style={{ background: 'none', padding: 0, width: 34, height: 34 }}>
-              <img src="/logo.svg" alt="Fanarrt" width="34" height="34" style={{ display: 'block', borderRadius: 8 }} />
+              <img src="/logo.svg" alt="Fanarrt" width="28" height="28" style={{ display: 'block' }} />
             </div>
             <div className="sidebar-logo-text">
               <div className="logo-title">Fanarrt</div>
