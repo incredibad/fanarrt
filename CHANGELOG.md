@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3
+
+- Fixed scroll position restoration on back navigation — replaced unreliable save-on-unmount with a continuous scroll listener that persists position to sessionStorage.
+
 ## v1.1.2
 
 - Fixed scroll position not restoring when navigating back to the library list.
