@@ -43,9 +43,10 @@ function FanartItem({ art, onToggleFav, onOpen }) {
     setIsFav(!!art.favourite_id)
   }
 
-  const isWide = ['background', 'banner'].includes(art.type)
+  const isBanner = art.type === 'banner'
+  const isWide = art.type === 'background'
   const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(art.type)
-  const aspectRatio = isWide ? '16/9' : isSquare ? '1/1' : '2/3'
+  const aspectRatio = isBanner ? '16/3' : isWide ? '16/9' : isSquare ? '1/1' : '2/3'
 
   const longPressTimer = useRef(null)
   const didLongPress = useRef(false)
@@ -107,9 +108,9 @@ function FanartItem({ art, onToggleFav, onOpen }) {
           onLoad={handleImgLoad}
           style={{
             aspectRatio, width: '100%',
-            objectFit: isSquare ? 'contain' : 'cover',
+            objectFit: (isSquare || isBanner) ? 'contain' : 'cover',
             display: 'block',
-            background: isSquare ? 'var(--bg-4)' : undefined,
+            background: (isSquare || isBanner) ? 'var(--bg-4)' : undefined,
             padding: isSquare ? '8px' : undefined,
           }}
         />
@@ -182,7 +183,8 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
     )
   }
 
-  const isWideType = t => ['background', 'banner'].includes(t)
+  const isBannerType = t => t === 'banner'
+  const isWideType = t => t === 'background'
   const isSquareType = t => ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(t)
 
   return (
@@ -211,7 +213,7 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
                     <span style={{ opacity: 0.5 }}>{bySource[src].length} items</span>
                   </div>
                 )}
-                <div className={`fanart-grid ${isWideType(type) ? '' : isSquareType(type) ? 'square-grid' : 'portrait-grid'}`}>
+                <div className={`fanart-grid ${isBannerType(type) ? 'banner-grid' : isWideType(type) ? '' : isSquareType(type) ? 'square-grid' : 'portrait-grid'}`}>
                   {bySource[src].map(art => (
                     <FanartItem
                       key={art.id}

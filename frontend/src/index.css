@@ -1276,6 +1276,11 @@ body {
 .tag-fanart-tv:hover    { border-color: #d97706 !important; color: #fcd34d !important; }
 .tag-fav                { color: var(--accent-2) !important; border-color: var(--accent) !important; }
 
+/* Banner grid — wider columns so banners aren't too short at ~5.4:1 ratio */
+.banner-grid {
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
 /* Square grid for logos, clearart, disc, icons */
 .square-grid {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
