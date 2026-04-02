@@ -219,7 +219,7 @@ export default function FavouritesPage() {
             </div>
 
             {/* Grid */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
               {displayedFavs.length === 0 ? (
                 <div className="empty-state">
                   <Star size={36} />
@@ -227,16 +227,7 @@ export default function FavouritesPage() {
                   <p>Select a title or adjust your filters.</p>
                 </div>
               ) : (
-                <div className="favs-grid">
-                  {displayedFavs.map(fav => (
-                    <FavCard
-                      key={fav.id}
-                      fav={fav}
-                      onRemove={() => handleRemove(fav)}
-                      onOpen={() => setLightbox(fav)}
-                    />
-                  ))}
-                </div>
+                <GroupedFavGrid favs={displayedFavs} onRemove={handleRemove} onOpen={setLightbox} />
               )}
             </div>
           </div>
@@ -255,22 +246,74 @@ export default function FavouritesPage() {
   )
 }
 
+// Same type order as item page
+const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
+
+function resLabel(w, h, type) {
+  if (!w || !h) return null
+  if (type === 'poster') return `${w}×${h}`
+  const long = Math.max(w, h)
+  if (long >= 3840) return '4K'
+  if (long >= 1920) return 'FHD'
+  if (long >= 1280) return 'HD'
+  return `${w}×${h}`
+}
+
+function GroupedFavGrid({ favs, onRemove, onOpen }) {
+  // Group by type in TYPE_ORDER
+  const grouped = {}
+  for (const fav of favs) {
+    const t = fav.type || 'other'
+    if (!grouped[t]) grouped[t] = []
+    grouped[t].push(fav)
+  }
+  const types = TYPE_ORDER.filter(t => grouped[t]?.length)
+
+  const isWideType   = t => ['background', 'banner'].includes(t)
+  const isSquareType = t => ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(t)
+
+  return (
+    <>
+      {types.map(type => (
+        <div key={type}>
+          <div className="fanart-section-title" style={{ padding: '16px 20px 8px' }}>
+            {type.charAt(0).toUpperCase() + type.slice(1)}s
+            <span>{grouped[type].length}</span>
+          </div>
+          <div className={`fanart-grid ${isWideType(type) ? '' : isSquareType(type) ? 'square-grid' : 'portrait-grid'}`}
+            style={{ padding: '0 20px 8px' }}>
+            {grouped[type].map(fav => (
+              <FavCard
+                key={fav.id}
+                fav={fav}
+                onRemove={() => onRemove(fav)}
+                onOpen={() => onOpen(fav)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
 function FavCard({ fav, onRemove, onOpen }) {
   const [imgError, setImgError] = useState(false)
-  const isWide = ['background', 'banner'].includes(fav.type)
-  const aspectRatio = isWide ? '16/9' : '2/3'
-
-  function resLabel(w, h) {
-    if (!w || !h) return null
-    const long = Math.max(w, h)
-    if (long >= 3840) return '4K'
-    if (long >= 1920) return 'FHD'
-    if (long >= 1280) return 'HD'
-    return null
-  }
+  const isWide   = ['background', 'banner'].includes(fav.type)
+  const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(fav.type)
+  const aspectRatio = isWide ? '16/9' : isSquare ? '1/1' : '2/3'
 
   const srcLabel = PROVIDER_LABELS[fav.source] || fav.source.toUpperCase()
-  const res = resLabel(fav.width, fav.height)
+  const res = resLabel(fav.width, fav.height, fav.type)
+
+  // For FTV images without stored dimensions, read from the loaded img
+  const [liveDims, setLiveDims] = useState(null)
+  const liveRes = liveDims ? resLabel(liveDims.w, liveDims.h, fav.type) : null
+  const displayRes = res || liveRes
+
+  const src = fav.source === 'fanart.tv'
+    ? `/api/proxy/thumb?url=${encodeURIComponent(fav.url)}`
+    : (fav.thumbnail_url || fav.url)
 
   return (
     <div className="fanart-item is-favourite" style={{ cursor: 'pointer' }} onClick={onOpen}>
@@ -278,18 +321,28 @@ function FavCard({ fav, onRemove, onOpen }) {
         <div className="fanart-error-placeholder" style={{ aspectRatio }}>Failed to load</div>
       ) : (
         <img
-          src={fav.thumbnail_url || fav.url}
+          src={src}
           alt={fav.type}
           loading="lazy"
           onError={() => setImgError(true)}
-          style={{ aspectRatio, width: '100%', objectFit: 'cover', display: 'block' }}
+          onLoad={e => {
+            if (!fav.width || !fav.height) {
+              const { naturalWidth: w, naturalHeight: h } = e.currentTarget
+              if (w > 0 && h > 0) setLiveDims({ w, h })
+            }
+          }}
+          style={{
+            aspectRatio, width: '100%', display: 'block',
+            objectFit: isSquare ? 'contain' : 'cover',
+            background: isSquare ? 'var(--bg-4)' : undefined,
+            padding: isSquare ? '8px' : undefined,
+          }}
         />
       )}
 
-      {/* Always-visible meta */}
       <div className="fanart-meta-strip">
         <span className={`fanart-source-chip source-${fav.source.replace('.', '-')}`}>{srcLabel}</span>
-        {res && <span className="fanart-res-chip">{res}</span>}
+        {displayRes && <span className="fanart-res-chip">{displayRes}</span>}
       </div>
 
       <div className="fanart-fav-indicator"><Star size={11} fill="#fff" /></div>
