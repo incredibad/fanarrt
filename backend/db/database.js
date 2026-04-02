@@ -61,12 +61,19 @@ db.exec(`
     UNIQUE(media_item_id, source, url)
   );
 
+  CREATE TABLE IF NOT EXISTS collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS favourites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
     fanart_id INTEGER NOT NULL REFERENCES fanart(id) ON DELETE CASCADE,
     media_item_id INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(fanart_id)
+    UNIQUE(collection_id, fanart_id)
   );
 
   CREATE INDEX IF NOT EXISTS idx_fanart_media ON fanart(media_item_id);
@@ -76,6 +83,35 @@ db.exec(`
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
+
+// Collections + favourites migration (v1.2.0)
+// Rebuild favourites table if it lacks collection_id
+const favsTableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='favourites'").get();
+if (favsTableSql && !favsTableSql.sql.includes('collection_id')) {
+  db.exec(`
+    BEGIN;
+    DROP TABLE favourites;
+    CREATE TABLE favourites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+      fanart_id INTEGER NOT NULL REFERENCES fanart(id) ON DELETE CASCADE,
+      media_item_id INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(collection_id, fanart_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_favourites_media ON favourites(media_item_id);
+    CREATE INDEX IF NOT EXISTS idx_favourites_collection ON favourites(collection_id);
+    COMMIT;
+  `);
+  console.log('DB migration: favourites rebuilt with collection_id (existing favourites cleared)');
+}
+
+// Ensure at least one collection exists
+const colCount = db.prepare('SELECT COUNT(*) as c FROM collections').get().c;
+if (colCount === 0) {
+  db.prepare("INSERT INTO collections(name) VALUES('My Favourites')").run();
+  console.log('DB migration: default collection created');
+}
 
 // Add fanart_fetched_at column if it doesn't exist yet
 try {

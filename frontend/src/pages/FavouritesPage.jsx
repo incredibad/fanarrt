@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, Film, Tv, Search, X, Download } from 'lucide-react'
+import { Star, Film, Tv, Search, X, Download, FolderOpen } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import DownloadMenu from '../components/DownloadMenu'
@@ -8,31 +8,35 @@ import Lightbox from '../components/Lightbox'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
-export default function FavouritesPage({ onFavCountChange }) {
-  const [allFavs, setAllFavs] = useState([])       // all favourites flat
-  const [stats, setStats] = useState([])            // [{id, title, type, count}]
+export default function FavouritesPage({ onFavCountChange, activeCollectionId, activeCollectionName }) {
+  const [allFavs, setAllFavs] = useState([])
+  const [stats, setStats] = useState([])
   const [loading, setLoading] = useState(true)
   const [lightbox, setLightbox] = useState(null)
   const [downloadingView, setDownloadingView] = useState(false)
 
-  // Filters
-  const [selectedId, setSelectedId] = useState(null)  // null = All
-  const [typeFilter, setTypeFilter] = useState('all')  // 'all' | 'show' | 'movie'
+  const [selectedId, setSelectedId] = useState(null)
+  const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    Promise.all([api.getFavouriteStats(), api.getFavourites()])
+    if (!activeCollectionId) return
+    setLoading(true)
+    setSelectedId(null)
+    Promise.all([
+      api.getFavouriteStats(activeCollectionId),
+      api.getFavourites({ collection_id: activeCollectionId }),
+    ])
       .then(([s, favs]) => {
         setStats(s)
         setAllFavs(favs)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }, [activeCollectionId])
 
   const totalCount = stats.reduce((a, b) => a + b.count, 0)
 
-  // Filtered stats list (left panel)
   const filteredStats = useMemo(() => {
     return stats.filter(s => {
       if (typeFilter !== 'all' && s.type !== typeFilter) return false
@@ -41,7 +45,6 @@ export default function FavouritesPage({ onFavCountChange }) {
     })
   }, [stats, typeFilter, search])
 
-  // Displayed favourites (right panel)
   const displayedFavs = useMemo(() => {
     return allFavs.filter(f => {
       if (selectedId && f.media_item_id !== selectedId) return false
@@ -53,14 +56,14 @@ export default function FavouritesPage({ onFavCountChange }) {
 
   const handleRemove = async (fav) => {
     try {
-      await api.removeFavourite(fav.fanart_id)
-      setAllFavs(prev => prev.filter(f => f.fanart_id !== fav.fanart_id))
+      await api.removeFavourite(fav.id)
+      setAllFavs(prev => prev.filter(f => f.id !== fav.id))
       setStats(prev => prev
         .map(s => s.id === fav.media_item_id ? { ...s, count: s.count - 1 } : s)
         .filter(s => s.count > 0)
       )
-      if (lightbox?.fanart_id === fav.fanart_id) setLightbox(null)
-      toast('Removed from favourites', 'info')
+      if (lightbox?.id === fav.id) setLightbox(null)
+      toast('Removed from collection', 'info')
       onFavCountChange?.(-1)
     } catch (e) {
       toast(e.message, 'error')
@@ -73,7 +76,7 @@ export default function FavouritesPage({ onFavCountChange }) {
     if (displayedFavs.length === 0) return
     const label = selectedItem
       ? selectedItem.title
-      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : 'All_Favourites'
+      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : (activeCollectionName || 'Collection')
     setDownloadingView(true)
     try {
       const res = await api.downloadView(displayedFavs.map(f => f.fanart_id), label)
@@ -82,7 +85,7 @@ export default function FavouritesPage({ onFavCountChange }) {
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = href
-      a.download = `${label.replace(/\s+/g, '_')}_favourites.zip`
+      a.download = `${label.replace(/\s+/g, '_')}_collection.zip`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -94,12 +97,14 @@ export default function FavouritesPage({ onFavCountChange }) {
     }
   }
 
+  const collectionLabel = activeCollectionName ?? 'Collection'
+
   return (
     <div className="scroll-area" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Favourites</h1>
+          <h1 className="page-title">{collectionLabel}</h1>
           <p className="page-subtitle">
             {totalCount} saved artwork items across {stats.length} titles
           </p>
@@ -113,8 +118,8 @@ export default function FavouritesPage({ onFavCountChange }) {
         <div className="loading-overlay"><div className="spinner" />Loading…</div>
       ) : stats.length === 0 ? (
         <div className="empty-state">
-          <Star size={48} />
-          <h3>No favourites yet</h3>
+          <FolderOpen size={48} />
+          <h3>Nothing in {collectionLabel} yet</h3>
           <p>Browse your library and click the star icon on any artwork to save it here.</p>
         </div>
       ) : (
@@ -122,7 +127,6 @@ export default function FavouritesPage({ onFavCountChange }) {
 
           {/* ── Left panel: title list ─────────────────────────────────────── */}
           <div className="favs-sidebar">
-            {/* Search + type filter */}
             <div style={{ padding: '12px 10px 8px', borderBottom: '1px solid var(--border-soft)' }}>
               <div className="search-input-wrap" style={{ maxWidth: '100%', marginBottom: 8 }}>
                 <Search size={13} />
@@ -152,18 +156,16 @@ export default function FavouritesPage({ onFavCountChange }) {
               </div>
             </div>
 
-            {/* "All" option */}
             <button
               className={`nav-item ${!selectedId ? 'active' : ''}`}
               style={{ margin: '4px 8px 2px', width: 'calc(100% - 16px)' }}
               onClick={() => setSelectedId(null)}
             >
               <Star size={13} />
-              <span style={{ flex: 1, textAlign: 'left', fontSize: 13 }}>All Favourites</span>
+              <span style={{ flex: 1, textAlign: 'left', fontSize: 13 }}>All</span>
               <span className="nav-badge">{filteredStats.reduce((a,b) => a+b.count, 0)}</span>
             </button>
 
-            {/* Per-title entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {filteredStats.length === 0 ? (
                 <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
@@ -188,13 +190,12 @@ export default function FavouritesPage({ onFavCountChange }) {
 
           {/* ── Right panel: fanart grid ───────────────────────────────────── */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Toolbar */}
             <div style={{
               padding: '12px 20px', borderBottom: '1px solid var(--border-soft)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
             }}>
               <span style={{ fontSize: 13.5, color: 'var(--text-2)', fontWeight: 500 }}>
-                {selectedItem ? selectedItem.title : typeFilter === 'all' ? 'All Favourites' : typeFilter === 'show' ? 'TV Shows' : 'Movies'}
+                {selectedItem ? selectedItem.title : typeFilter === 'all' ? 'All' : typeFilter === 'show' ? 'TV Shows' : 'Movies'}
                 <span style={{ color: 'var(--text-3)', fontWeight: 400, marginLeft: 8 }}>
                   {displayedFavs.length} items
                 </span>
@@ -219,12 +220,11 @@ export default function FavouritesPage({ onFavCountChange }) {
               </div>
             </div>
 
-            {/* Grid */}
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
               {displayedFavs.length === 0 ? (
                 <div className="empty-state">
                   <Star size={36} />
-                  <h3>No favourites here</h3>
+                  <h3>Nothing here</h3>
                   <p>Select a title or adjust your filters.</p>
                 </div>
               ) : (
@@ -247,7 +247,6 @@ export default function FavouritesPage({ onFavCountChange }) {
   )
 }
 
-// Same type order as item page
 const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
 
 function resLabel(w, h, type) {
@@ -261,7 +260,6 @@ function resLabel(w, h, type) {
 }
 
 function GroupedFavGrid({ favs, onRemove, onOpen }) {
-  // Group by type in TYPE_ORDER
   const grouped = {}
   for (const fav of favs) {
     const t = fav.type || 'other'
@@ -309,7 +307,6 @@ function FavCard({ fav, onRemove, onOpen }) {
   const srcLabel = PROVIDER_LABELS[fav.source] || fav.source.toUpperCase()
   const res = resLabel(fav.width, fav.height, fav.type)
 
-  // For FTV images without stored dimensions, read from the loaded img
   const [liveDims, setLiveDims] = useState(null)
   const liveRes = liveDims ? resLabel(liveDims.w, liveDims.h, fav.type) : null
   const displayRes = res || liveRes
@@ -354,7 +351,7 @@ function FavCard({ fav, onRemove, onOpen }) {
         <button
           className="fanart-action-btn fav-btn active"
           onClick={e => { e.stopPropagation(); onRemove() }}
-          title="Remove from favourites"
+          title="Remove from collection"
         >
           <Star size={13} fill="#fff" />
         </button>

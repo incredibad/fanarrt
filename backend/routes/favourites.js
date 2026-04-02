@@ -2,11 +2,12 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { downloadItemFavourites, downloadAllFavourites, downloadTypeFavourites, downloadFanartIds } = require('../services/download');
 
-// GET /api/favourites - all favourites
+// GET /api/favourites?collection_id=X
 router.get('/', (req, res) => {
-  const { media_item_id } = req.query;
+  const { media_item_id, collection_id } = req.query;
   let where = '1=1';
   const params = [];
+  if (collection_id) { where += ' AND fav.collection_id=?'; params.push(collection_id); }
   if (media_item_id) { where += ' AND fav.media_item_id=?'; params.push(media_item_id); }
 
   const favs = db.prepare(`
@@ -22,42 +23,49 @@ router.get('/', (req, res) => {
   res.json(favs);
 });
 
-// POST /api/favourites - add favourite
+// POST /api/favourites — add to collection
 router.post('/', (req, res) => {
-  const { fanart_id, media_item_id } = req.body;
-  if (!fanart_id || !media_item_id) return res.status(400).json({ error: 'Missing fields' });
+  const { fanart_id, media_item_id, collection_id } = req.body;
+  if (!fanart_id || !media_item_id || !collection_id) return res.status(400).json({ error: 'Missing fields' });
 
   try {
     const result = db.prepare(
-      'INSERT OR IGNORE INTO favourites(fanart_id, media_item_id) VALUES(?,?)'
-    ).run(fanart_id, media_item_id);
-    res.json({ ok: true, created: result.changes > 0 });
+      'INSERT OR IGNORE INTO favourites(collection_id, fanart_id, media_item_id) VALUES(?,?,?)'
+    ).run(collection_id, fanart_id, media_item_id);
+    const id = result.lastInsertRowid || db.prepare(
+      'SELECT id FROM favourites WHERE collection_id=? AND fanart_id=?'
+    ).get(collection_id, fanart_id)?.id;
+    res.json({ ok: true, created: result.changes > 0, id });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 });
 
-// DELETE /api/favourites/:id - remove favourite
+// DELETE /api/favourites/:id — remove by row id (collection-scoped)
 router.delete('/:id', (req, res) => {
-  // id can be favourite id OR fanart_id
-  const result = db.prepare('DELETE FROM favourites WHERE id=? OR fanart_id=?')
-    .run(req.params.id, req.params.id);
+  const result = db.prepare('DELETE FROM favourites WHERE id=?').run(req.params.id);
   res.json({ ok: true, deleted: result.changes });
 });
 
-// GET /api/favourites/stats - counts per media item
+// GET /api/favourites/stats?collection_id=X — counts per media item
 router.get('/stats', (req, res) => {
+  const { collection_id } = req.query;
+  let where = '1=1';
+  const params = [];
+  if (collection_id) { where += ' AND fav.collection_id=?'; params.push(collection_id); }
+
   const stats = db.prepare(`
     SELECT mi.id, mi.title, mi.type, COUNT(fav.id) as count
     FROM media_items mi
     JOIN favourites fav ON fav.media_item_id = mi.id
+    WHERE ${where}
     GROUP BY mi.id
     ORDER BY mi.title
-  `).all();
+  `).all(...params);
   res.json(stats);
 });
 
-// POST /api/favourites/download/view - download current view (array of fanart IDs)
+// POST /api/favourites/download/view
 router.post('/download/view', async (req, res) => {
   const { fanart_ids, label } = req.body;
   if (!Array.isArray(fanart_ids) || fanart_ids.length === 0) {
@@ -66,22 +74,22 @@ router.post('/download/view', async (req, res) => {
   await downloadFanartIds(fanart_ids, label, res);
 });
 
-// GET /api/favourites/download/all - zip all
+// GET /api/favourites/download/all
 router.get('/download/all', async (req, res) => {
   await downloadAllFavourites(res);
 });
 
-// GET /api/favourites/download/shows - zip shows only
+// GET /api/favourites/download/shows
 router.get('/download/shows', async (req, res) => {
   await downloadTypeFavourites('show', res);
 });
 
-// GET /api/favourites/download/movies - zip movies only
+// GET /api/favourites/download/movies
 router.get('/download/movies', async (req, res) => {
   await downloadTypeFavourites('movie', res);
 });
 
-// GET /api/favourites/download/:mediaItemId - zip one item
+// GET /api/favourites/download/:mediaItemId
 router.get('/download/:mediaItemId', async (req, res) => {
   await downloadItemFavourites(req.params.mediaItemId, res);
 });
