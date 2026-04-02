@@ -83,7 +83,13 @@ export default function App() {
       ...prev,
       favourites: Math.max(0, (prev.favourites ?? 0) + delta),
     }))
-  }, [])
+    // Keep per-collection count in sync for the sidebar badge
+    setCollections(prev => prev.map(c =>
+      c.id === activeCollectionId
+        ? { ...c, count: Math.max(0, (c.count || 0) + delta) }
+        : c
+    ))
+  }, [activeCollectionId])
 
   const handleCollectionChange = useCallback((id) => {
     setActiveCollectionId(id)
@@ -100,6 +106,15 @@ export default function App() {
       toast(e.message, 'error')
     }
   }, [handleCollectionChange])
+
+  const handleCollectionRename = useCallback(async (id, name) => {
+    try {
+      await api.renameCollection(id, name)
+      setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))
+    } catch (e) {
+      toast(e.message, 'error')
+    }
+  }, [])
 
   const handleCollectionDelete = useCallback(async (id) => {
     try {
@@ -167,7 +182,6 @@ export default function App() {
         activeCollectionId={activeCollectionId}
         onCollectionChange={handleCollectionChange}
         onCollectionCreate={handleCollectionCreate}
-        onCollectionDelete={handleCollectionDelete}
       />
       <main className="main-content">
         <Routes>
@@ -183,8 +197,9 @@ export default function App() {
           <Route path="/favourites" element={
             <FavouritesPage
               onFavCountChange={handleFavCountChange}
-              activeCollectionId={activeCollectionId}
-              activeCollectionName={activeCollection?.name}
+              activeCollection={activeCollection}
+              onCollectionRename={handleCollectionRename}
+              onCollectionDelete={handleCollectionDelete}
             />
           } />
           <Route path="/settings" element={<SettingsPage onLogout={handleLogout} />} />
