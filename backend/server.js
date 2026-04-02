@@ -48,6 +48,7 @@ app.use('/api/proxy', require('./routes/proxy')); // image proxy — auth not re
 app.use('/api/settings', requireAuth, require('./routes/settings'));
 app.use('/api/library', requireAuth, require('./routes/library'));
 app.use('/api/favourites', requireAuth, require('./routes/favourites'));
+app.use('/api/collections', requireAuth, require('./routes/collections'));
 
 // Serve frontend (SPA)
 const PUBLIC = path.join(__dirname, 'public');

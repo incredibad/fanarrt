@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.2.0
+
+- Favourites replaced with Collections. Artwork can be saved to named collections; an item can appear in multiple collections simultaneously.
+- Active collection selector in the sidebar, shown when more than one collection exists. Inline creation of new collections directly from the dropdown.
+- Deleting a collection shows a confirmation modal with an item count, then removes only that collection's entries — items in other collections are unaffected.
+- Star icon on fanart cards now has three states: empty (not in active collection), filled (in active collection only), multi-star (in active collection plus at least one other).
+- Collections page (formerly Favourites) reflects the active collection — title, item list, and counts all update when switching collections.
+- Default collection "My Favourites" created automatically on first launch.
+
 ## v1.1.11
 
 - Download zip filenames now use the format `title_type_001.jpg` (3-digit zero-padded counter, flat structure with no subdirectories).

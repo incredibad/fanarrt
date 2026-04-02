@@ -44,15 +44,24 @@ export const api = {
   fetchAllFanart: () => apiFetch('/library/fetch-all-fanart', { method: 'POST' }),
   needsRefresh: (id) => apiFetch(`/library/${id}/needs-refresh`),
 
+  // Collections
+  getCollections: () => apiFetch('/collections'),
+  createCollection: (name) =>
+    apiFetch('/collections', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteCollection: (id) => apiFetch(`/collections/${id}`, { method: 'DELETE' }),
+
   // Favourites
   getFavourites: (params = {}) => {
     const q = new URLSearchParams(params).toString()
     return apiFetch(`/favourites?${q}`)
   },
-  addFavourite: (fanart_id, media_item_id) =>
-    apiFetch('/favourites', { method: 'POST', body: JSON.stringify({ fanart_id, media_item_id }) }),
+  addFavourite: (fanart_id, media_item_id, collection_id) =>
+    apiFetch('/favourites', { method: 'POST', body: JSON.stringify({ fanart_id, media_item_id, collection_id }) }),
   removeFavourite: (id) => apiFetch(`/favourites/${id}`, { method: 'DELETE' }),
-  getFavouriteStats: () => apiFetch('/favourites/stats'),
+  getFavouriteStats: (collection_id) => {
+    const q = collection_id ? `?collection_id=${collection_id}` : ''
+    return apiFetch(`/favourites/stats${q}`)
+  },
   downloadView: (fanart_ids, label) =>
     fetch('/api/favourites/download/view', {
       method: 'POST',

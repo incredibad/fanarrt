@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { X, Star, Download } from 'lucide-react'
+import MultiStarIcon from './MultiStarIcon'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv' }
 
@@ -51,7 +52,7 @@ async function downloadImage(url, filename) {
   }
 }
 
-export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
+export default function Lightbox({ image, isFavourite, isMultiCollection, onClose, onToggleFav }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
@@ -83,8 +84,10 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
           className={`btn ${isFavourite ? 'btn-primary' : 'btn-secondary'}`}
           onClick={onToggleFav}
         >
-          <Star size={14} fill={isFavourite ? '#fff' : 'none'} />
-          {isFavourite ? 'Unfavourite' : 'Add to Favourites'}
+          {isMultiCollection
+            ? <MultiStarIcon size={14} fill="#fff" />
+            : <Star size={14} fill={isFavourite ? '#fff' : 'none'} />}
+          {isFavourite ? 'Remove from collection' : 'Add to collection'}
         </button>
 
         <button

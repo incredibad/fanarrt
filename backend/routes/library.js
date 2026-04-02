@@ -56,7 +56,8 @@ router.get('/:id', (req, res) => {
 
 // GET /api/library/:id/fanart
 router.get('/:id/fanart', (req, res) => {
-  const { type, source } = req.query;
+  const { type, source, collection_id } = req.query;
+  const collId = parseInt(collection_id) || 0;
   let where = 'f.media_item_id = ?';
   const params = [req.params.id];
 
@@ -70,12 +71,14 @@ router.get('/:id/fanart', (req, res) => {
   if (Array.isArray(savedOrder) && savedOrder.length) providerOrder = savedOrder;
 
   const fanart = db.prepare(`
-    SELECT f.*, fav.id as favourite_id
+    SELECT f.*,
+      fav_active.id as favourite_id,
+      (SELECT COUNT(*) FROM favourites fo WHERE fo.fanart_id = f.id AND fo.collection_id != ?) as other_collection_count
     FROM fanart f
-    LEFT JOIN favourites fav ON fav.fanart_id = f.id
+    LEFT JOIN favourites fav_active ON fav_active.fanart_id = f.id AND fav_active.collection_id = ?
     WHERE ${where}
     ORDER BY f.likes DESC, f.id ASC
-  `).all(...params);
+  `).all(collId, collId, ...params);
 
   // Sort within each type group by provider order, then by likes
   const providerRank = Object.fromEntries(providerOrder.map((p, i) => [p, i]));

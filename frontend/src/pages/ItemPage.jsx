@@ -49,7 +49,7 @@ function providerLinks(item) {
 
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
-export default function ItemPage({ onFavCountChange }) {
+export default function ItemPage({ onFavCountChange, activeCollectionId }) {
   const { id } = useParams()
   const [item, setItem] = useState(null)
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
@@ -63,23 +63,27 @@ export default function ItemPage({ onFavCountChange }) {
   const didAutoFetch = useRef(false)
 
   const loadFanart = useCallback(async () => {
-    const fanart = await api.getItemFanart(id)
+    const fanart = await api.getItemFanart(id, { collection_id: activeCollectionId })
     setFanartData(fanart)
+    setFavCount(fanart.fanart.filter(f => f.favourite_id).length)
     return fanart
-  }, [id])
+  }, [id, activeCollectionId])
 
   const loadItem = useCallback(async () => {
     try {
-      const [itemData, fanart] = await Promise.all([api.getItem(id), api.getItemFanart(id)])
+      const [itemData, fanart] = await Promise.all([
+        api.getItem(id),
+        api.getItemFanart(id, { collection_id: activeCollectionId }),
+      ])
       setItem(itemData)
       setFanartData(fanart)
-      setFavCount(itemData.favourite_count || 0)
+      setFavCount(fanart.fanart.filter(f => f.favourite_id).length)
     } catch (e) {
       toast(e.message, 'error')
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, activeCollectionId])
 
   // Auto-refresh: check if fanart needs fetching on first load
   useEffect(() => {
@@ -117,34 +121,29 @@ export default function ItemPage({ onFavCountChange }) {
   }
 
   const handleToggleFav = useCallback(async (art) => {
-    // art.favourite_id being set means "was a fav before this click"
     const wasFav = !!art.favourite_id
     try {
       if (wasFav) {
         await api.removeFavourite(art.favourite_id)
         setFavCount(c => Math.max(0, c - 1))
         onFavCountChange?.(-1)
+        setFanartData(prev => ({
+          ...prev,
+          fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: null } : f),
+        }))
       } else {
-        const result = await api.addFavourite(art.id, item?.id)
+        const result = await api.addFavourite(art.id, item?.id, activeCollectionId)
         setFavCount(c => c + 1)
         onFavCountChange?.(+1)
-        // Persist the real favourite_id back into the fanart array
         setFanartData(prev => ({
           ...prev,
           fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: result?.id || 'temp' } : f),
         }))
       }
-      if (wasFav) {
-        // Clear favourite_id from fanart array
-        setFanartData(prev => ({
-          ...prev,
-          fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: null } : f),
-        }))
-      }
     } catch (e) {
       toast(e.message, 'error')
     }
-  }, [item, onFavCountChange])
+  }, [item, activeCollectionId, onFavCountChange])
 
   if (loading) return <div className="loading-overlay" style={{ flex: 1 }}><div className="spinner" />Loading…</div>
   if (!item) return <div className="empty-state" style={{ flex: 1 }}><h3>Item not found</h3></div>
@@ -212,7 +211,7 @@ export default function ItemPage({ onFavCountChange }) {
               <span className="tag">{fanartData.total} artwork</span>
               <span className="tag tag-fav">
                 <Star size={10} style={{ display:'inline', marginRight:3 }} />
-                {favCount} favourites
+                {favCount} in collection
               </span>
             </div>
 

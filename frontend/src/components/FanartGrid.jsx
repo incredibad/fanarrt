@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { Star } from 'lucide-react'
+import MultiStarIcon from './MultiStarIcon'
 import Lightbox from './Lightbox'
 
 export const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
@@ -26,17 +27,16 @@ function resLabel(width, height, type) {
   return `${width}×${height}`
 }
 
-// FanartItem holds its OWN local favourite state so it updates instantly
-// without waiting for parent re-render or grouped data restructure.
 function FanartItem({ art, onToggleFav, onOpen }) {
   const [imgError, setImgError] = useState(false)
-  // For FTV images that have no stored dimensions, read them from the loaded img element
   const [liveDims, setLiveDims] = useState(
     (art.width && art.height) ? { w: art.width, h: art.height } : null
   )
-  // Local fav state — initialised from prop, updated immediately on toggle
+  // isFav: in the active collection
   const [isFav, setIsFav] = useState(!!art.favourite_id)
-  // Keep in sync if parent re-renders with fresh data (e.g. after page load)
+  // otherCount: how many other collections this art is in (independent of active)
+  const [otherCount, setOtherCount] = useState(art.other_collection_count || 0)
+
   const prevFavRef = useRef(!!art.favourite_id)
   if (!!art.favourite_id !== prevFavRef.current) {
     prevFavRef.current = !!art.favourite_id
@@ -47,6 +47,8 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   const isWide = art.type === 'background'
   const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(art.type)
   const aspectRatio = isBanner ? '16/3' : isWide ? '16/9' : isSquare ? '1/1' : '2/3'
+
+  const isMulti = isFav && otherCount > 0
 
   const longPressTimer = useRef(null)
   const didLongPress = useRef(false)
@@ -63,7 +65,6 @@ function FanartItem({ art, onToggleFav, onOpen }) {
 
   const handleClick = useCallback(() => {
     if (!didLongPress.current) {
-      // Pass enriched art with live dimensions so lightbox shows correct res info
       const enriched = liveDims ? { ...art, width: liveDims.w, height: liveDims.h } : art
       onOpen(enriched)
     }
@@ -72,12 +73,12 @@ function FanartItem({ art, onToggleFav, onOpen }) {
 
   const handleFavClick = useCallback((e) => {
     if (e) e.stopPropagation()
-    setIsFav(v => !v)
+    const nowFav = !isFav
+    setIsFav(nowFav)
     onToggleFav({ ...art, favourite_id: isFav ? (art.favourite_id || 'temp') : null })
   }, [art, isFav, onToggleFav])
 
   const handleImgLoad = useCallback((e) => {
-    // For FTV images without stored dimensions, use naturalWidth/naturalHeight
     if (!art.width || !art.height) {
       const { naturalWidth: w, naturalHeight: h } = e.currentTarget
       if (w > 0 && h > 0) setLiveDims({ w, h })
@@ -87,6 +88,10 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   const srcLabel = PROVIDER_LABELS[art.source] || art.source.toUpperCase()
   const dims = liveDims || (art.width && art.height ? { w: art.width, h: art.height } : null)
   const res = dims ? resLabel(dims.w, dims.h, art.type) : null
+
+  const favTitle = isFav
+    ? (isMulti ? 'Remove from active collection (also in others)' : 'Remove from collection')
+    : 'Add to collection'
 
   return (
     <div
@@ -123,7 +128,9 @@ function FanartItem({ art, onToggleFav, onOpen }) {
 
       {isFav && (
         <div className="fanart-fav-indicator">
-          <Star size={11} fill="#fff" />
+          {isMulti
+            ? <MultiStarIcon size={11} fill="#fff" />
+            : <Star size={11} fill="#fff" />}
         </div>
       )}
 
@@ -131,9 +138,11 @@ function FanartItem({ art, onToggleFav, onOpen }) {
         <button
           className={`fanart-action-btn fav-btn ${isFav ? 'active' : ''}`}
           onClick={handleFavClick}
-          title={isFav ? 'Remove from favourites' : 'Add to favourites'}
+          title={favTitle}
         >
-          <Star size={13} fill={isFav ? '#fff' : 'none'} />
+          {isMulti
+            ? <MultiStarIcon size={13} fill="#fff" />
+            : <Star size={13} fill={isFav ? '#fff' : 'none'} />}
         </button>
       </div>
     </div>
@@ -149,17 +158,15 @@ function groupBySource(arts) {
   return map
 }
 
-// FanartGrid no longer manages favourite state — it passes through to FanartItem
-// which handles its own local state instantly.
 export default function FanartGrid({ grouped, onToggleFav, activeType }) {
   const [lightboxImg, setLightboxImg] = useState(null)
   const [lightboxFav, setLightboxFav] = useState(false)
+  const [lightboxOtherCount, setLightboxOtherCount] = useState(0)
 
   const handleOpen = useCallback((art) => {
-    // If this FanartItem has detected live dims, they'll be in the art object already
-    // (we merge them before calling onOpen)
     setLightboxImg(art)
     setLightboxFav(!!art.favourite_id)
+    setLightboxOtherCount(art.other_collection_count || 0)
   }, [])
 
   const handleLightboxFav = useCallback(() => {
@@ -233,6 +240,7 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
         <Lightbox
           image={lightboxImg}
           isFavourite={lightboxFav}
+          isMultiCollection={lightboxFav && lightboxOtherCount > 0}
           onClose={() => setLightboxImg(null)}
           onToggleFav={handleLightboxFav}
         />
