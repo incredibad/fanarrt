@@ -55,7 +55,7 @@ async function syncSonarr() {
       title: s.title,
       year: s.year || null,
       tvdb_id: s.tvdbId ? String(s.tvdbId) : null,
-      tmdb_id: null,
+      tmdb_id: s.tmdbId ? String(s.tmdbId) : null,
       imdb_id: s.imdbId || null,
       sonarr_id: String(s.id),
       radarr_id: null,

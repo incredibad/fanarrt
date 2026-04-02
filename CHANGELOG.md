@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+- Fixed TMDB badge not appearing on TV show pages — Sonarr's `tmdbId` was being discarded during sync.
+
 ## v1.1.0
 
 - Real-time favourites count in the nav sidebar — increments/decrements instantly when starring or unstarring artwork on the item page or removing from the favourites page, without requiring a full page reload.
