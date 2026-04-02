@@ -49,7 +49,7 @@ function providerLinks(item) {
 
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
-export default function ItemPage() {
+export default function ItemPage({ onFavCountChange }) {
   const { id } = useParams()
   const [item, setItem] = useState(null)
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
@@ -123,9 +123,11 @@ export default function ItemPage() {
       if (wasFav) {
         await api.removeFavourite(art.favourite_id)
         setFavCount(c => Math.max(0, c - 1))
+        onFavCountChange?.(-1)
       } else {
         const result = await api.addFavourite(art.id, item?.id)
         setFavCount(c => c + 1)
+        onFavCountChange?.(+1)
         // Persist the real favourite_id back into the fanart array
         setFanartData(prev => ({
           ...prev,
@@ -142,7 +144,7 @@ export default function ItemPage() {
     } catch (e) {
       toast(e.message, 'error')
     }
-  }, [item])
+  }, [item, onFavCountChange])
 
   if (loading) return <div className="loading-overlay" style={{ flex: 1 }}><div className="spinner" />Loading…</div>
   if (!item) return <div className="empty-state" style={{ flex: 1 }}><h3>Item not found</h3></div>
