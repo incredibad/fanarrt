@@ -79,8 +79,8 @@ export default function SettingsPage({ onLogout }) {
     api.getSettings()
       .then(data => {
         setForm(prev => ({ ...prev, ...data }))
-        if (data.provider_order) {
-          try { setProviderOrder(JSON.parse(data.provider_order)) } catch {}
+        if (Array.isArray(data.provider_order) && data.provider_order.length) {
+          setProviderOrder(data.provider_order)
         }
       })
       .catch(console.error)
