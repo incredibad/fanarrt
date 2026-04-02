@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.7
+
+- Library sort now ignores leading "The", "A", and "An" so e.g. "The Wire" sorts under W.
+
 ## v1.1.6
 
 - Search/filter bar is now sticky on library pages so it remains accessible while scrolling.

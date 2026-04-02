@@ -3,8 +3,12 @@ import { Link, useLocation } from 'react-router-dom'
 import { Search, Tv, Film, Star, X } from 'lucide-react'
 import { api } from '../api'
 
+function sortTitle(title) {
+  return title.replace(/^(the |a |an )/i, '').trimStart()
+}
+
 function firstLetter(title) {
-  const c = title.replace(/^(the |a |an )/i, '').charAt(0).toUpperCase()
+  const c = sortTitle(title).charAt(0).toUpperCase()
   return /[A-Z]/.test(c) ? c : '#'
 }
 
@@ -30,7 +34,13 @@ export default function LibraryPage({ typeFilter }) {
     if (typeFilter) params.type = typeFilter
     if (debouncedSearch) params.search = debouncedSearch
     api.getLibrary(params)
-      .then(data => { setItems(data.items); setTotal(data.total) })
+      .then(data => {
+        const sorted = data.items.slice().sort((a, b) =>
+          sortTitle(a.title).localeCompare(sortTitle(b.title))
+        )
+        setItems(sorted)
+        setTotal(data.total)
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [typeFilter, debouncedSearch])
