@@ -41,9 +41,9 @@ export default function LibraryPage({ typeFilter }) {
     if (loading) return
     const saved = scrollCache[cacheKey]
     if (saved != null) {
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = saved
-      })
+      }))
     }
   }, [loading, cacheKey])
 

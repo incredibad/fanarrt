@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2
+
+- Fixed scroll position not restoring when navigating back to the library list.
+
 ## v1.1.1
 
 - Fixed TMDB badge not appearing on TV show pages — Sonarr's `tmdbId` was being discarded during sync.
