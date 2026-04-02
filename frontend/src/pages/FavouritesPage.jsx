@@ -270,8 +270,9 @@ function GroupedFavGrid({ favs, onRemove, onOpen }) {
   }
   const types = TYPE_ORDER.filter(t => grouped[t]?.length)
 
-  const isWideType   = t => ['background', 'banner'].includes(t)
-  const isSquareType = t => ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(t)
+  const isBannerType  = t => t === 'banner'
+  const isWideType    = t => t === 'background'
+  const isSquareType  = t => ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(t)
 
   return (
     <>
@@ -281,7 +282,7 @@ function GroupedFavGrid({ favs, onRemove, onOpen }) {
             {type.charAt(0).toUpperCase() + type.slice(1)}s
             <span>{grouped[type].length}</span>
           </div>
-          <div className={`fanart-grid ${isWideType(type) ? '' : isSquareType(type) ? 'square-grid' : 'portrait-grid'}`}
+          <div className={`fanart-grid ${isBannerType(type) ? 'banner-grid' : isWideType(type) ? '' : isSquareType(type) ? 'square-grid' : 'portrait-grid'}`}
             style={{ padding: '0 20px 8px' }}>
             {grouped[type].map(fav => (
               <FavCard
@@ -300,9 +301,10 @@ function GroupedFavGrid({ favs, onRemove, onOpen }) {
 
 function FavCard({ fav, onRemove, onOpen }) {
   const [imgError, setImgError] = useState(false)
-  const isWide   = ['background', 'banner'].includes(fav.type)
+  const isBanner = fav.type === 'banner'
+  const isWide   = fav.type === 'background'
   const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(fav.type)
-  const aspectRatio = isWide ? '16/9' : isSquare ? '1/1' : '2/3'
+  const aspectRatio = isBanner ? '16/3' : isWide ? '16/9' : isSquare ? '1/1' : '2/3'
 
   const srcLabel = PROVIDER_LABELS[fav.source] || fav.source.toUpperCase()
   const res = resLabel(fav.width, fav.height, fav.type)
@@ -334,8 +336,8 @@ function FavCard({ fav, onRemove, onOpen }) {
           }}
           style={{
             aspectRatio, width: '100%', display: 'block',
-            objectFit: isSquare ? 'contain' : 'cover',
-            background: isSquare ? 'var(--bg-4)' : undefined,
+            objectFit: (isSquare || isBanner) ? 'contain' : 'cover',
+            background: (isSquare || isBanner) ? 'var(--bg-4)' : undefined,
             padding: isSquare ? '8px' : undefined,
           }}
         />

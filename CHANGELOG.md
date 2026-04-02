@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.9
+
+- Banner thumbnails now use a 16:3 aspect ratio (~5.3:1, matching the typical 758×140 TVDB banner) with object-fit: contain so the full banner is always visible. Banners also get wider grid columns (400px min) so they aren't too short.
+
 ## v1.1.8
 
 - Fixed provider order not being respected — settings.get() already JSON-parses the stored value, so calling JSON.parse() again coerced the array to a string and threw a silent error, leaving the order stuck at the hardcoded default. Affected both the settings page load and the fanart sort.
