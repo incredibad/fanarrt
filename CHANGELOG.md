@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.5
+
+- Fixed scroll restoration properly — the root cause was a CSS layout issue where .app-layout used min-height instead of height, so .scroll-area was never actually the scroll container (the window was). Changed to height: 100vh so .scroll-area has a bounded height and scrolls correctly.
+
 ## v1.1.4
 
 - Fixed scroll position restoration (again) — use useLayoutEffect to restore before the browser paints, and a ref to track scroll position so the value saved on unmount is never stale.
