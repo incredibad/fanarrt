@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.10
+
+- Settings page reorganised into three tabs: Media Servers (Sonarr/Radarr), Providers (TVDB/TMDB/Fanart.tv/priority order), and Account (change password/sign out).
+
 ## v1.1.9
 
 - Banner thumbnails now use a 16:3 aspect ratio (~5.3:1, matching the typical 758×140 TVDB banner) with object-fit: contain so the full banner is always visible. Banners also get wider grid columns (400px min) so they aren't too short.
