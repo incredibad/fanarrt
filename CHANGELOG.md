@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.11
+
+- Download zip filenames now use the format `title_type_001.jpg` (3-digit zero-padded counter, flat structure with no subdirectories).
+
 ## v1.1.10
 
 - Settings page reorganised into three tabs: Media Servers (Sonarr/Radarr), Providers (TVDB/TMDB/Fanart.tv/priority order), and Account (change password/sign out).
