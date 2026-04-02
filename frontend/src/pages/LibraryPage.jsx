@@ -3,8 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { Search, Tv, Film, Star, X } from 'lucide-react'
 import { api } from '../api'
 
-const scrollCache = {}
-
 function firstLetter(title) {
   const c = title.replace(/^(the |a |an )/i, '').charAt(0).toUpperCase()
   return /[A-Z]/.test(c) ? c : '#'
@@ -36,23 +34,31 @@ export default function LibraryPage({ typeFilter }) {
       .finally(() => setLoading(false))
   }, [typeFilter, debouncedSearch])
 
-  // Restore scroll after load
+  // Save scroll position continuously so it's not lost if unmount fires late
+  useEffect(() => {
+    const el = scrollAreaRef.current
+    if (!el) return
+    let timer
+    const onScroll = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        sessionStorage.setItem(`scroll:${cacheKey}`, el.scrollTop)
+      }, 100)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => { clearTimeout(timer); el.removeEventListener('scroll', onScroll) }
+  }, [cacheKey])
+
+  // Restore scroll after items are in the DOM
   useEffect(() => {
     if (loading) return
-    const saved = scrollCache[cacheKey]
-    if (saved != null) {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = saved
-      }))
-    }
+    const saved = sessionStorage.getItem(`scroll:${cacheKey}`)
+    if (!saved) return
+    const pos = Number(saved)
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = pos
+    }))
   }, [loading, cacheKey])
-
-  // Save scroll on unmount
-  useEffect(() => {
-    return () => {
-      if (scrollAreaRef.current) scrollCache[cacheKey] = scrollAreaRef.current.scrollTop
-    }
-  }, [cacheKey])
 
   function jumpToLetter(letter) {
     const container = scrollAreaRef.current
