@@ -45,8 +45,8 @@ async function downloadItemFavourites(mediaItemId, res) {
   const counts = {};
   for (const fav of favs) {
     counts[fav.type] = (counts[fav.type] || 0) + 1;
-    const n = counts[fav.type];
-    const filePath = `${sanitize(item.title)}/${fav.type}/${fav.type}_${n}`;
+    const n = String(counts[fav.type]).padStart(3, '0');
+    const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
     await streamImageToArchive(archive, fav.url, filePath);
   }
 
@@ -75,11 +75,10 @@ async function downloadAllFavourites(res) {
     `).all(item.id);
 
     const counts = {};
-    const folder = item.type === 'show' ? 'TV Shows' : 'Movies';
     for (const fav of favs) {
       counts[fav.type] = (counts[fav.type] || 0) + 1;
-      const n = counts[fav.type];
-      const filePath = `${folder}/${sanitize(item.title)}/${fav.type}/${fav.type}_${n}`;
+      const n = String(counts[fav.type]).padStart(3, '0');
+      const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -113,8 +112,8 @@ async function downloadTypeFavourites(type, res) {
     const counts = {};
     for (const fav of favs) {
       counts[fav.type] = (counts[fav.type] || 0) + 1;
-      const n = counts[fav.type];
-      const filePath = `${sanitize(item.title)}/${fav.type}/${fav.type}_${n}`;
+      const n = String(counts[fav.type]).padStart(3, '0');
+      const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -140,10 +139,10 @@ async function downloadFanartIds(fanartIds, label, res) {
       WHERE f.id = ?
     `).get(fanartId);
     if (!row) continue;
-    const folder = sanitize(row.media_title);
-    const key = `${folder}/${row.type}`;
+    const key = `${sanitize(row.media_title)}/${row.type}`;
     counts[key] = (counts[key] || 0) + 1;
-    const filePath = `${folder}/${row.type}/${row.type}_${counts[key]}`;
+    const n = String(counts[key]).padStart(3, '0');
+    const filePath = `${sanitize(row.media_title)}_${row.type}_${n}`;
     await streamImageToArchive(archive, row.url, filePath);
   }
 
