@@ -1,0 +1,167 @@
+const router = require('express').Router();
+const db = require('../db/database');
+const { syncSonarr, syncRadarr } = require('../services/arrSync');
+const { fetchFanartForItem } = require('../services/fanartFetch');
+
+// GET /api/library - list all media items
+router.get('/', (req, res) => {
+  const { type, search, page = 1, limit = 10000 } = req.query;
+  let where = '1=1';
+  const params = [];
+
+  if (type && ['show', 'movie'].includes(type)) {
+    where += ' AND mi.type = ?';
+    params.push(type);
+  }
+  if (search) {
+    where += ' AND mi.title LIKE ?';
+    params.push(`%${search}%`);
+  }
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const total = db.prepare(`SELECT COUNT(*) as c FROM media_items mi WHERE ${where}`).get(...params).c;
+
+  const items = db.prepare(`
+    SELECT mi.*,
+      COUNT(DISTINCT f.id) as fanart_count,
+      COUNT(DISTINCT fav.id) as favourite_count
+    FROM media_items mi
+    LEFT JOIN fanart f ON f.media_item_id = mi.id
+    LEFT JOIN favourites fav ON fav.media_item_id = mi.id
+    WHERE ${where}
+    GROUP BY mi.id
+    ORDER BY mi.title ASC
+    LIMIT ? OFFSET ?
+  `).all(...params, parseInt(limit), offset);
+
+  res.json({ items, total, page: parseInt(page), limit: parseInt(limit) });
+});
+
+// GET /api/library/:id - single item with fanart
+router.get('/:id', (req, res) => {
+  const item = db.prepare(`
+    SELECT mi.*,
+      COUNT(DISTINCT f.id) as fanart_count,
+      COUNT(DISTINCT fav.id) as favourite_count
+    FROM media_items mi
+    LEFT JOIN fanart f ON f.media_item_id = mi.id
+    LEFT JOIN favourites fav ON fav.media_item_id = mi.id
+    WHERE mi.id = ?
+    GROUP BY mi.id
+  `).get(req.params.id);
+
+  if (!item) return res.status(404).json({ error: 'Not found' });
+  res.json(item);
+});
+
+// GET /api/library/:id/fanart
+router.get('/:id/fanart', (req, res) => {
+  const { type, source } = req.query;
+  let where = 'f.media_item_id = ?';
+  const params = [req.params.id];
+
+  if (type) { where += ' AND f.type = ?'; params.push(type); }
+  if (source) { where += ' AND f.source = ?'; params.push(source); }
+
+  // Get provider order from settings (default order if not set)
+  const settings = require('../services/settings');
+  let providerOrder = ['fanart.tv', 'tvdb', 'tmdb'];
+  try {
+    const raw = settings.get('provider_order');
+    if (raw) providerOrder = JSON.parse(raw);
+  } catch {}
+
+  const fanart = db.prepare(`
+    SELECT f.*, fav.id as favourite_id
+    FROM fanart f
+    LEFT JOIN favourites fav ON fav.fanart_id = f.id
+    WHERE ${where}
+    ORDER BY f.likes DESC, f.id ASC
+  `).all(...params);
+
+  // Sort within each type group by provider order, then by likes
+  const providerRank = Object.fromEntries(providerOrder.map((p, i) => [p, i]));
+  fanart.sort((a, b) => {
+    if (a.type !== b.type) return 0; // type grouping handled by TYPE_ORDER in frontend
+    const ra = providerRank[a.source] ?? 99;
+    const rb = providerRank[b.source] ?? 99;
+    if (ra !== rb) return ra - rb;
+    return (b.likes || 0) - (a.likes || 0);
+  });
+
+  // Group by type
+  const grouped = {};
+  for (const art of fanart) {
+    if (!grouped[art.type]) grouped[art.type] = [];
+    grouped[art.type].push(art);
+  }
+
+  // Within each type group, sort by provider order then likes
+  for (const type of Object.keys(grouped)) {
+    grouped[type].sort((a, b) => {
+      const ra = providerRank[a.source] ?? 99;
+      const rb = providerRank[b.source] ?? 99;
+      if (ra !== rb) return ra - rb;
+      return (b.likes || 0) - (a.likes || 0);
+    });
+  }
+
+  res.json({ fanart, grouped, total: fanart.length });
+});
+
+// POST /api/library/sync - sync from Sonarr/Radarr
+router.post('/sync', async (req, res) => {
+  const results = { sonarr: null, radarr: null, errors: [] };
+
+  try { results.sonarr = await syncSonarr(); }
+  catch (e) { results.errors.push(`Sonarr: ${e.message}`); }
+
+  try { results.radarr = await syncRadarr(); }
+  catch (e) { results.errors.push(`Radarr: ${e.message}`); }
+
+  res.json(results);
+});
+
+// POST /api/library/:id/fetch-fanart - fetch fanart for one item
+router.post('/:id/fetch-fanart', async (req, res) => {
+  const item = db.prepare('SELECT * FROM media_items WHERE id=?').get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  const count = await fetchFanartForItem(item);
+  db.prepare('UPDATE media_items SET fanart_fetched_at=CURRENT_TIMESTAMP WHERE id=?').run(item.id);
+  res.json({ fetched: count });
+});
+
+// GET /api/library/:id/needs-refresh - returns whether auto-fetch should run (48h window)
+router.get('/:id/needs-refresh', (req, res) => {
+  const item = db.prepare('SELECT fanart_fetched_at FROM media_items WHERE id=?').get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  let needsRefresh = true;
+  if (item.fanart_fetched_at) {
+    const fetchedAt = new Date(item.fanart_fetched_at + 'Z').getTime();
+    const hoursSince = (Date.now() - fetchedAt) / (1000 * 60 * 60);
+    needsRefresh = hoursSince >= 48;
+  }
+  res.json({ needsRefresh, fanart_fetched_at: item.fanart_fetched_at });
+});
+
+// POST /api/library/fetch-all-fanart - fetch fanart for all items
+router.post('/fetch-all-fanart', async (req, res) => {
+  const items = db.prepare('SELECT * FROM media_items WHERE status=?').all('active');
+  let total = 0;
+  const errors = [];
+
+  for (const item of items) {
+    try {
+      const count = await fetchFanartForItem(item);
+      total += count;
+    } catch (e) {
+      errors.push(`${item.title}: ${e.message}`);
+    }
+  }
+
+  res.json({ total, errors });
+});
+
+module.exports = router;

@@ -1,0 +1,27 @@
+version: '3.8'
+
+# Development compose — builds the image locally from source.
+# Use this when testing changes before pushing to GitHub.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d --build
+
+services:
+  fanarrt:
+    build: .
+    container_name: fanarrt-dev
+    ports:
+      - "3579:3579"
+    volumes:
+      - fanarrt-data:/app/data
+      - fanarrt-downloads:/app/downloads
+    environment:
+      - NODE_ENV=production
+      - PORT=3579
+      - DATA_DIR=/app/data
+      - DOWNLOADS_DIR=/app/downloads
+    restart: unless-stopped
+
+volumes:
+  fanarrt-data:
+  fanarrt-downloads:
