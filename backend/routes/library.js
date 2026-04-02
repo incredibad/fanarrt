@@ -66,10 +66,8 @@ router.get('/:id/fanart', (req, res) => {
   // Get provider order from settings (default order if not set)
   const settings = require('../services/settings');
   let providerOrder = ['fanart.tv', 'tvdb', 'tmdb'];
-  try {
-    const raw = settings.get('provider_order');
-    if (raw) providerOrder = JSON.parse(raw);
-  } catch {}
+  const savedOrder = settings.get('provider_order');
+  if (Array.isArray(savedOrder) && savedOrder.length) providerOrder = savedOrder;
 
   const fanart = db.prepare(`
     SELECT f.*, fav.id as favourite_id

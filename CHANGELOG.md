@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.8
+
+- Fixed provider order not being respected — settings.get() already JSON-parses the stored value, so calling JSON.parse() again coerced the array to a string and threw a silent error, leaving the order stuck at the hardcoded default. Affected both the settings page load and the fanart sort.
+
 ## v1.1.7
 
 - Library sort now ignores leading "The", "A", and "An" so e.g. "The Wire" sorts under W.
