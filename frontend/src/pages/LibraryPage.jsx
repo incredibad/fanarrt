@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Search, Tv, Film, Star, X } from 'lucide-react'
 import { api } from '../api'
@@ -15,6 +15,7 @@ export default function LibraryPage({ typeFilter }) {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const scrollAreaRef = useRef(null)
+  const scrollPosRef = useRef(0)
   const location = useLocation()
   const cacheKey = location.pathname
 
@@ -34,30 +35,25 @@ export default function LibraryPage({ typeFilter }) {
       .finally(() => setLoading(false))
   }, [typeFilter, debouncedSearch])
 
-  // Save scroll position continuously so it's not lost if unmount fires late
+  // Track scroll position into a ref (no re-render, always current)
   useEffect(() => {
     const el = scrollAreaRef.current
     if (!el) return
-    let timer
-    const onScroll = () => {
-      clearTimeout(timer)
-      timer = setTimeout(() => {
-        sessionStorage.setItem(`scroll:${cacheKey}`, el.scrollTop)
-      }, 100)
-    }
+    const onScroll = () => { scrollPosRef.current = el.scrollTop }
     el.addEventListener('scroll', onScroll, { passive: true })
-    return () => { clearTimeout(timer); el.removeEventListener('scroll', onScroll) }
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Save to sessionStorage on unmount using the ref value (never stale)
+  useEffect(() => {
+    return () => { sessionStorage.setItem(`scroll:${cacheKey}`, scrollPosRef.current) }
   }, [cacheKey])
 
-  // Restore scroll after items are in the DOM
-  useEffect(() => {
+  // Restore synchronously after React commits items to DOM, before browser paints
+  useLayoutEffect(() => {
     if (loading) return
     const saved = sessionStorage.getItem(`scroll:${cacheKey}`)
-    if (!saved) return
-    const pos = Number(saved)
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = pos
-    }))
+    if (saved && scrollAreaRef.current) scrollAreaRef.current.scrollTop = Number(saved)
   }, [loading, cacheKey])
 
   function jumpToLetter(letter) {

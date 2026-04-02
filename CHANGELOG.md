@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.4
+
+- Fixed scroll position restoration (again) — use useLayoutEffect to restore before the browser paints, and a ref to track scroll position so the value saved on unmount is never stale.
+
 ## v1.1.3
 
 - Fixed scroll position restoration on back navigation — replaced unreliable save-on-unmount with a continuous scroll listener that persists position to sessionStorage.
