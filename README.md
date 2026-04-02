@@ -1,5 +1,6 @@
 # Fanarrt
 
+
 A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Radarr media library.
 
 ## Features
