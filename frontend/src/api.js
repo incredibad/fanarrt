@@ -49,6 +49,8 @@ export const api = {
   createCollection: (name) =>
     apiFetch('/collections', { method: 'POST', body: JSON.stringify({ name }) }),
   deleteCollection: (id) => apiFetch(`/collections/${id}`, { method: 'DELETE' }),
+  renameCollection: (id, name) =>
+    apiFetch(`/collections/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
 
   // Favourites
   getFavourites: (params = {}) => {

@@ -281,6 +281,23 @@ body {
 .collection-new-confirm:disabled { opacity: 0.35; cursor: default; }
 .collection-new-cancel:hover { color: var(--red); border-color: var(--red); }
 
+/* Collection rename input (inline in page header) */
+.collection-rename-input {
+  font-size: 22px;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  color: var(--text);
+  outline: none;
+  padding: 0 2px 2px;
+  min-width: 180px;
+  max-width: 400px;
+  width: 100%;
+  font-family: var(--font);
+  line-height: 1.3;
+}
+
 /* ── Modal ────────────────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;

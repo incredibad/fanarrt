@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { Star, Film, Tv, Search, X, Download, FolderOpen } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import DownloadMenu from '../components/DownloadMenu'
@@ -8,7 +8,10 @@ import Lightbox from '../components/Lightbox'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
-export default function FavouritesPage({ onFavCountChange, activeCollectionId, activeCollectionName }) {
+export default function FavouritesPage({ onFavCountChange, activeCollection, onCollectionRename, onCollectionDelete }) {
+  const activeCollectionId = activeCollection?.id
+  const navigate = useNavigate()
+
   const [allFavs, setAllFavs] = useState([])
   const [stats, setStats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,6 +21,34 @@ export default function FavouritesPage({ onFavCountChange, activeCollectionId, a
   const [selectedId, setSelectedId] = useState(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
+
+  // ⋮ menu state
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+  // Rename state
+  const [renaming, setRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const renameInputRef = useRef(null)
+  // Delete confirmation
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpen])
+
+  // Focus rename input when it appears
+  useEffect(() => {
+    if (renaming) {
+      setRenameValue(activeCollection?.name ?? '')
+      setTimeout(() => renameInputRef.current?.select(), 0)
+    }
+  }, [renaming])
 
   useEffect(() => {
     if (!activeCollectionId) return
@@ -72,11 +103,24 @@ export default function FavouritesPage({ onFavCountChange, activeCollectionId, a
 
   const selectedItem = selectedId ? stats.find(s => s.id === selectedId) : null
 
+  const handleRenameSubmit = async () => {
+    const name = renameValue.trim()
+    if (!name || name === activeCollection?.name) { setRenaming(false); return }
+    setRenaming(false)
+    await onCollectionRename(activeCollectionId, name)
+  }
+
+  const handleDeleteConfirm = async () => {
+    setConfirmingDelete(false)
+    await onCollectionDelete(activeCollectionId)
+    navigate('/favourites')
+  }
+
   const handleDownloadView = async () => {
     if (displayedFavs.length === 0) return
     const label = selectedItem
       ? selectedItem.title
-      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : (activeCollectionName || 'Collection')
+      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : (activeCollection?.name || 'Collection')
     setDownloadingView(true)
     try {
       const res = await api.downloadView(displayedFavs.map(f => f.fanart_id), label)
@@ -97,18 +141,69 @@ export default function FavouritesPage({ onFavCountChange, activeCollectionId, a
     }
   }
 
-  const collectionLabel = activeCollectionName ?? 'Collection'
+  const collectionLabel = activeCollection?.name ?? 'Collection'
 
   return (
     <div className="scroll-area" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1 className="page-title">{collectionLabel}</h1>
-          <p className="page-subtitle">
-            {totalCount} saved artwork items across {stats.length} titles
-          </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <div>
+            {renaming ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <input
+                  ref={renameInputRef}
+                  className="collection-rename-input"
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleRenameSubmit()
+                    if (e.key === 'Escape') setRenaming(false)
+                  }}
+                  onBlur={handleRenameSubmit}
+                />
+              </div>
+            ) : (
+              <h1 className="page-title">{collectionLabel}</h1>
+            )}
+            <p className="page-subtitle">
+              {totalCount} saved artwork items across {stats.length} titles
+            </p>
+          </div>
+
+          {/* ⋮ context menu */}
+          <div className="dropdown" ref={menuRef} style={{ marginTop: 6 }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ padding: '5px 7px' }}
+              onClick={() => setMenuOpen(o => !o)}
+              title="Collection options"
+            >
+              <MoreVertical size={15} />
+            </button>
+            {menuOpen && (
+              <div className="dropdown-menu" style={{ minWidth: 150 }}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => { setMenuOpen(false); setRenaming(true) }}
+                >
+                  <Pencil size={13} />
+                  Rename
+                </button>
+                <div className="dropdown-sep" />
+                <button
+                  className="dropdown-item"
+                  style={{ color: 'var(--red)' }}
+                  onClick={() => { setMenuOpen(false); setConfirmingDelete(true) }}
+                >
+                  <Trash2 size={13} />
+                  Delete collection
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="page-actions">
           {totalCount > 0 && <DownloadMenu label="Download All" />}
         </div>
@@ -120,7 +215,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollectionId, a
         <div className="empty-state">
           <FolderOpen size={48} />
           <h3>Nothing in {collectionLabel} yet</h3>
-          <p>Browse your library and click the star icon on any artwork to save it here.</p>
+          <p>Browse your library and star any artwork to save it here.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -242,6 +337,24 @@ export default function FavouritesPage({ onFavCountChange, activeCollectionId, a
           onClose={() => setLightbox(null)}
           onToggleFav={() => handleRemove(lightbox)}
         />
+      )}
+
+      {/* Delete confirmation modal */}
+      {confirmingDelete && (
+        <div className="modal-overlay" onClick={() => setConfirmingDelete(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <h3 className="modal-title">Delete collection?</h3>
+            <p className="modal-body">
+              Deleting <strong>{collectionLabel}</strong> will remove{' '}
+              <strong>{activeCollection?.count ?? totalCount} item{(activeCollection?.count ?? totalCount) !== 1 ? 's' : ''}</strong>.
+              This cannot be undone.
+            </p>
+            <div className="modal-actions">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmingDelete(false)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={handleDeleteConfirm}>Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
