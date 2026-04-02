@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import LibraryPage from './pages/LibraryPage'
 import ItemPage from './pages/ItemPage'
@@ -56,6 +56,13 @@ export default function App() {
     } catch {}
   }
 
+  const handleFavCountChange = useCallback((delta) => {
+    setCounts(prev => ({
+      ...prev,
+      favourites: Math.max(0, (prev.favourites ?? 0) + delta),
+    }))
+  }, [])
+
   const handleAuthComplete = () => setAuthState(AUTH_OK)
 
   const handleLogout = async () => {
@@ -104,8 +111,8 @@ export default function App() {
           <Route path="/" element={<LibraryPage />} />
           <Route path="/shows" element={<LibraryPage typeFilter="show" />} />
           <Route path="/movies" element={<LibraryPage typeFilter="movie" />} />
-          <Route path="/item/:id" element={<ItemPage />} />
-          <Route path="/favourites" element={<FavouritesPage />} />
+          <Route path="/item/:id" element={<ItemPage onFavCountChange={handleFavCountChange} />} />
+          <Route path="/favourites" element={<FavouritesPage onFavCountChange={handleFavCountChange} />} />
           <Route path="/settings" element={<SettingsPage onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

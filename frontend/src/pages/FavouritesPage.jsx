@@ -8,7 +8,7 @@ import Lightbox from '../components/Lightbox'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
-export default function FavouritesPage() {
+export default function FavouritesPage({ onFavCountChange }) {
   const [allFavs, setAllFavs] = useState([])       // all favourites flat
   const [stats, setStats] = useState([])            // [{id, title, type, count}]
   const [loading, setLoading] = useState(true)
@@ -61,6 +61,7 @@ export default function FavouritesPage() {
       )
       if (lightbox?.fanart_id === fav.fanart_id) setLightbox(null)
       toast('Removed from favourites', 'info')
+      onFavCountChange?.(-1)
     } catch (e) {
       toast(e.message, 'error')
     }

@@ -47,7 +47,7 @@ export default function Sidebar({ onSync, syncing, counts = {} }) {
             </div>
             <div className="sidebar-logo-text">
               <div className="logo-title">Fanarrt</div>
-              <div className="logo-sub">v1.0</div>
+              <div className="logo-sub">v1.1</div>
             </div>
           </div>
         </div>
