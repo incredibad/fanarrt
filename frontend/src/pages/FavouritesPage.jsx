@@ -105,6 +105,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     try {
       if (currentFavId) {
         await api.removeFavourite(currentFavId)
+        onFavCountChange?.(-1, collectionId)
         if (collectionId === activeCollectionId) {
           setAllFavs(prev => prev.filter(f => f.id !== fav.id))
           setStats(prev =>
@@ -113,11 +114,11 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
           )
           if (lightbox?.id === fav.id) setLightbox(null)
           toast('Removed from collection', 'info')
-          onFavCountChange?.(-1)
         }
         return null
       } else {
         const result = await api.addFavourite(fav.fanart_id, fav.media_item_id, collectionId)
+        onFavCountChange?.(+1, collectionId)
         return result
       }
     } catch (e) {

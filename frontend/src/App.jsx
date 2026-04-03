@@ -78,14 +78,18 @@ export default function App() {
     loadCounts(activeCollectionId)
   }, [authState, activeCollectionId])
 
-  const handleFavCountChange = useCallback((delta) => {
-    setCounts(prev => ({
-      ...prev,
-      favourites: Math.max(0, (prev.favourites ?? 0) + delta),
-    }))
-    // Keep per-collection count in sync for the sidebar badge
+  const handleFavCountChange = useCallback((delta, collectionId) => {
+    const targetId = collectionId ?? activeCollectionId
+    // Only update the sidebar favourites link count for the active collection
+    if (targetId === activeCollectionId) {
+      setCounts(prev => ({
+        ...prev,
+        favourites: Math.max(0, (prev.favourites ?? 0) + delta),
+      }))
+    }
+    // Always update the specific collection's badge count
     setCollections(prev => prev.map(c =>
-      c.id === activeCollectionId
+      c.id === targetId
         ? { ...c, count: Math.max(0, (c.count || 0) + delta) }
         : c
     ))
