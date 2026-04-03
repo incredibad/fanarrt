@@ -1400,6 +1400,7 @@ body {
 .source-tvdb      { background: rgba(37,99,235,0.92);  color: #dbeafe; }
 .source-tmdb      { background: rgba(5,150,105,0.92);  color: #d1fae5; }
 .source-fanart-tv { background: rgba(161,67,6,0.92);   color: #fde68a; }
+.source-anilist   { background: rgba(2,169,141,0.92);  color: #ccfbf1; }
 .source-all       { background: rgba(55,65,81,0.92);   color: #e5e7eb;
                     padding: 2px 7px; border-radius: 4px;
                     font-size: 10px; font-family: var(--font-mono); font-weight: 700; }
@@ -1733,6 +1734,7 @@ body {
 .tag-tvdb:hover         { border-color: #3b82f6 !important; color: #93c5fd !important; }
 .tag-tmdb:hover         { border-color: #10b981 !important; color: #6ee7b7 !important; }
 .tag-fanart-tv:hover    { border-color: #d97706 !important; color: #fcd34d !important; }
+.tag-anilist:hover      { border-color: #02a98d !important; color: #5eead4 !important; }
 .tag-fav                { color: var(--accent-2) !important; border-color: var(--accent) !important; }
 
 /* Banner grid — wider columns so banners aren't too short at ~5.4:1 ratio */

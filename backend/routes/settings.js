@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
     'radarr_url', 'radarr_api_key',
     'tvdb_api_key', 'tvdb_pin',
     'tmdb_api_key', 'fanart_api_key',
-    'provider_order',
+    'provider_order', 'anilist_enabled',
     'sonarr_instances', 'radarr_instances',
   ];
 

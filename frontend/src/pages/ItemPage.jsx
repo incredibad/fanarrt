@@ -7,7 +7,7 @@ import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
 import DownloadMenu from '../components/DownloadMenu'
 import { toast } from '../hooks/useToast'
 
-const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv' }
+const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv', anilist: 'AniList' }
 
 // Build external provider links shown in hero tags
 function providerLinks(item) {

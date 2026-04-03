@@ -60,7 +60,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS fanart (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     media_item_id INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
-    source TEXT NOT NULL CHECK(source IN ('tvdb', 'tmdb', 'fanart.tv')),
+    source TEXT NOT NULL CHECK(source IN ('tvdb', 'tmdb', 'fanart.tv', 'anilist')),
     source_id TEXT,
     type TEXT NOT NULL,
     url TEXT NOT NULL,
@@ -132,15 +132,15 @@ try {
   db.exec(`ALTER TABLE media_items ADD COLUMN fanart_fetched_at DATETIME`);
 } catch {}
 
-// Fix the source CHECK constraint to include 'fanart.tv'
+// Fix the source CHECK constraint to include 'fanart.tv' and 'anilist'
 const fanartTableSql = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='fanart'`).get();
-if (fanartTableSql && !fanartTableSql.sql.includes("'fanart.tv'")) {
+if (fanartTableSql && (!fanartTableSql.sql.includes("'fanart.tv'") || !fanartTableSql.sql.includes("'anilist'"))) {
   db.exec(`
     BEGIN;
     CREATE TABLE fanart_new (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       media_item_id INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
-      source TEXT NOT NULL CHECK(source IN ('tvdb', 'tmdb', 'fanart.tv')),
+      source TEXT NOT NULL CHECK(source IN ('tvdb', 'tmdb', 'fanart.tv', 'anilist')),
       source_id TEXT,
       type TEXT NOT NULL,
       url TEXT NOT NULL,
@@ -159,7 +159,7 @@ if (fanartTableSql && !fanartTableSql.sql.includes("'fanart.tv'")) {
     CREATE INDEX IF NOT EXISTS idx_fanart_type ON fanart(type);
     COMMIT;
   `);
-  console.log('DB migration: fanart source constraint updated to include fanart.tv');
+  console.log('DB migration: fanart source constraint updated to include fanart.tv and anilist');
 }
 
 // Rebuild media_items to add 'anime' type and remove per-instance unique constraints (v1.5.0)
