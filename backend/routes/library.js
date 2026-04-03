@@ -5,7 +5,7 @@ const { fetchFanartForItem } = require('../services/fanartFetch');
 
 // GET /api/library - list all media items
 router.get('/', (req, res) => {
-  const { type, search, page = 1, limit = 10000 } = req.query;
+  const { type, search, page = 1, limit = 10000, collection_id } = req.query;
   let where = '1=1';
   const params = [];
 
@@ -18,6 +18,11 @@ router.get('/', (req, res) => {
     params.push(`%${search}%`);
   }
 
+  const collId = parseInt(collection_id) || null;
+  const favJoin = collId
+    ? `LEFT JOIN favourites fav ON fav.media_item_id = mi.id AND fav.collection_id = ${collId}`
+    : `LEFT JOIN favourites fav ON fav.media_item_id = mi.id`;
+
   const offset = (parseInt(page) - 1) * parseInt(limit);
   const total = db.prepare(`SELECT COUNT(*) as c FROM media_items mi WHERE ${where}`).get(...params).c;
 
@@ -27,7 +32,7 @@ router.get('/', (req, res) => {
       COUNT(DISTINCT fav.id) as favourite_count
     FROM media_items mi
     LEFT JOIN fanart f ON f.media_item_id = mi.id
-    LEFT JOIN favourites fav ON fav.media_item_id = mi.id
+    ${favJoin}
     WHERE ${where}
     GROUP BY mi.id
     ORDER BY mi.title ASC

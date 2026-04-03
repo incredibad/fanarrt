@@ -12,7 +12,7 @@ function firstLetter(title) {
   return /[A-Z]/.test(c) ? c : '#'
 }
 
-export default function LibraryPage({ typeFilter }) {
+export default function LibraryPage({ typeFilter, activeCollectionId }) {
   const [items, setItems] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -33,6 +33,7 @@ export default function LibraryPage({ typeFilter }) {
     const params = { limit: 10000 }
     if (typeFilter) params.type = typeFilter
     if (debouncedSearch) params.search = debouncedSearch
+    if (activeCollectionId) params.collection_id = activeCollectionId
     api.getLibrary(params)
       .then(data => {
         const sorted = data.items.slice().sort((a, b) =>
@@ -43,7 +44,7 @@ export default function LibraryPage({ typeFilter }) {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [typeFilter, debouncedSearch])
+  }, [typeFilter, debouncedSearch, activeCollectionId])
 
   // Track scroll position into a ref (no re-render, always current)
   useEffect(() => {
