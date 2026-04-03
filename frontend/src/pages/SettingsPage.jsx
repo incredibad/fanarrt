@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Save, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 
@@ -149,7 +149,7 @@ export default function SettingsPage({ onLogout }) {
         <div style={{ padding: '0 32px 32px' }}>
           <div className="settings-grid">
             <div className="settings-section">
-              <div className="settings-section-title"><span style={{ fontSize: 16 }}>📺</span> Sonarr</div>
+              <div className="settings-section-title"><img src="/sonarr.svg" width="18" height="18" alt="" /> Sonarr</div>
               <InstanceManager
                 arrType="sonarr"
                 instances={sonarrInstances}
@@ -160,7 +160,7 @@ export default function SettingsPage({ onLogout }) {
             </div>
 
             <div className="settings-section">
-              <div className="settings-section-title"><span style={{ fontSize: 16 }}>🎬</span> Radarr</div>
+              <div className="settings-section-title"><img src="/radarr.svg" width="18" height="18" alt="" /> Radarr</div>
               <InstanceManager
                 arrType="radarr"
                 instances={radarrInstances}
@@ -407,27 +407,23 @@ function InstanceManager({ arrType, instances, instanceStatus, onChange, onTest 
 
         return (
           <div key={inst.id} className="instance-card">
-            <div className="instance-card-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                <ConnectionStatus status={instanceStatus[statusKey]} />
-                <span className="instance-card-label">{inst.label || 'Unnamed'}</span>
-                {arrType === 'sonarr' && inst.type_mode && inst.type_mode !== 'auto' && (
-                  <span className={`instance-type-badge type-mode-${inst.type_mode}`}>
-                    {TYPE_MODE_LABELS[inst.type_mode]}
-                  </span>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => startEdit(inst)} title="Edit">
-                  <ChevronDown size={13} />
-                </button>
-                <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(inst.id)} title="Remove"
-                  style={{ color: 'var(--text-3)' }}>
-                  <Trash2 size={13} />
-                </button>
-              </div>
+            <ConnectionStatus status={instanceStatus[statusKey]} />
+            <span className="instance-card-label">{inst.label || 'Unnamed'}</span>
+            {arrType === 'sonarr' && inst.type_mode && inst.type_mode !== 'auto' && (
+              <span className={`instance-type-badge type-mode-${inst.type_mode}`}>
+                {TYPE_MODE_LABELS[inst.type_mode]}
+              </span>
+            )}
+            <span className="instance-card-url">{inst.url || <em style={{ color: 'var(--text-3)' }}>No URL set</em>}</span>
+            <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => startEdit(inst)} title="Edit">
+                <Pencil size={13} />
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(inst.id)} title="Remove"
+                style={{ color: 'var(--text-3)' }}>
+                <Trash2 size={13} />
+              </button>
             </div>
-            <div className="instance-card-url">{inst.url || <em style={{ color: 'var(--text-3)' }}>No URL set</em>}</div>
           </div>
         )
       })}
