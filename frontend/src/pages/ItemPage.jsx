@@ -247,7 +247,6 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                 {link.display}
               </a>
             ))}
-            <span className="tag">{fanartData.total} artwork</span>
             {favCount > 0 && (
               <span className="tag tag-fav">
                 <Star size={10} style={{ display:'inline', marginRight:3 }} />
@@ -271,7 +270,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
       {fanartData.total > 0 && (
         <div className="type-filter-bar">
           {/* Art type tabs */}
-          <div style={{ display:'flex', gap:2, flexWrap:'wrap', flex:1 }}>
+          <div className="type-filter-tabs">
             {availableTypes.map(t => (
               <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
                 onClick={() => setActiveType(t)}>
@@ -287,7 +286,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
           {/* Provider filter chips — clickable to filter */}
           {allSources.length > 1 && (
-            <div style={{ display:'flex', gap:4, alignItems:'center', marginLeft:'auto', flexShrink:0 }}>
+            <div className="type-provider-chips">
               <button
                 className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
                 onClick={() => setActiveSource('all')}
