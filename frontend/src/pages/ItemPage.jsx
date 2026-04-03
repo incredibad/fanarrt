@@ -256,7 +256,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
           </div>
 
           <div className="item-hero-actions">
-            <button className="btn btn-primary btn-sm" onClick={handleFetchFanart}
+            <button className="btn btn-primary btn-sm item-refresh-btn" onClick={handleFetchFanart}
               disabled={fetching || autoFetching}>
               <RefreshCw size={13} style={{ animation: (fetching||autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
               {fetching ? 'Fetching…' : autoFetching ? 'Auto-fetching…' : fanartData.total > 0 ? 'Refresh Fanart' : 'Fetch Fanart'}
@@ -327,6 +327,17 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         collections={collections}
         activeCollectionId={activeCollectionId}
       />
+
+      {/* Mobile-only floating refresh FAB */}
+      <button
+        className="item-refresh-fab"
+        onClick={handleFetchFanart}
+        disabled={fetching || autoFetching}
+        title={fetching || autoFetching ? 'Fetching…' : 'Refresh Fanart'}
+        aria-label="Refresh Fanart"
+      >
+        <RefreshCw size={20} style={{ animation: (fetching || autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
+      </button>
     </div>
   )
 }
