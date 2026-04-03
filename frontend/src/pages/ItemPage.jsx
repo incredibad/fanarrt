@@ -211,7 +211,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
       {/* Hero */}
       <div className="item-hero">
         {backdropSrc && (
-          <img className="item-hero-backdrop" src={backdropSrc} alt="" aria-hidden="true" />
+          <div className="item-hero-backdrop" style={{ backgroundImage: `url(${backdropSrc})` }} aria-hidden="true" />
         )}
         <div className="item-hero-poster">
           {item.poster_path && !imgError ? (
