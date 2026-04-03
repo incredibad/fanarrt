@@ -200,7 +200,7 @@ async function fetchFanartTvMovie(tmdbId, mediaItemId) {
 
 async function fetchFanartForItem(item) {
   let total = 0;
-  if (item.type === 'show') {
+  if (item.type === 'show' || item.type === 'anime') {
     if (item.tvdb_id) {
       total += await fetchTvdbFanart(item.tvdb_id, item.id);
       total += await fetchFanartTvShow(item.tvdb_id, item.id);
