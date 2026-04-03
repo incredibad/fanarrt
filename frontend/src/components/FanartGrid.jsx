@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react'
-import { Star } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Star, ChevronDown, Check } from 'lucide-react'
 import Lightbox from './Lightbox'
+import { api } from '../api'
 
 export const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
 
@@ -26,18 +27,82 @@ function resLabel(width, height, type) {
   return `${width}×${height}`
 }
 
-function FanartItem({ art, onToggleFav, onOpen }) {
+function CollectionPicker({ artId, collections, activeCollectionId, activeFavId, onToggle, onClose }) {
+  const [membership, setMembership] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.getFanartCollections(artId).then(rows => {
+      const map = {}
+      for (const col of collections) map[col.id] = null
+      for (const r of rows) map[r.collection_id] = r.id
+      // Ensure active collection reflects live isFav state
+      if (activeFavId) map[activeCollectionId] = activeFavId
+      else map[activeCollectionId] = null
+      setMembership(map)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [artId])
+
+  const handleToggle = async (e, col) => {
+    e.stopPropagation()
+    const currentFavId = membership[col.id]
+    // Optimistic update
+    setMembership(prev => ({ ...prev, [col.id]: currentFavId ? null : 'pending' }))
+    const result = await onToggle(col.id, currentFavId)
+    setMembership(prev => ({
+      ...prev,
+      [col.id]: currentFavId ? null : (result?.id || 'temp'),
+    }))
+  }
+
+  return (
+    <div className="collection-picker-dropdown" onClick={e => e.stopPropagation()}>
+      {loading ? (
+        <div className="collection-picker-loading">Loading…</div>
+      ) : collections.map(col => {
+        const inCol = !!membership?.[col.id]
+        return (
+          <button
+            key={col.id}
+            className={`collection-picker-item ${inCol ? 'in-collection' : ''}`}
+            onClick={(e) => handleToggle(e, col)}
+          >
+            <span className="collection-picker-check">{inCol && <Check size={11} />}</span>
+            <span>{col.name}</span>
+            {col.id === activeCollectionId && <span className="collection-picker-badge">active</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections, activeCollectionId }) {
   const [imgError, setImgError] = useState(false)
   const [liveDims, setLiveDims] = useState(
     (art.width && art.height) ? { w: art.width, h: art.height } : null
   )
-  // isFav: in the active collection
   const [isFav, setIsFav] = useState(!!art.favourite_id)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const pickerRef = useRef(null)
+
   const prevFavRef = useRef(!!art.favourite_id)
   if (!!art.favourite_id !== prevFavRef.current) {
     prevFavRef.current = !!art.favourite_id
     setIsFav(!!art.favourite_id)
   }
+
+  const showPicker = collections?.length > 1
+
+  useEffect(() => {
+    if (!pickerOpen) return
+    const handler = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pickerOpen])
 
   const isBanner = art.type === 'banner'
   const isWide = art.type === 'background'
@@ -72,6 +137,19 @@ function FanartItem({ art, onToggleFav, onOpen }) {
     onToggleFav({ ...art, favourite_id: isFav ? (art.favourite_id || 'temp') : null })
   }, [art, isFav, onToggleFav])
 
+  const handleChevronClick = useCallback((e) => {
+    e.stopPropagation()
+    setPickerOpen(o => !o)
+  }, [])
+
+  const handlePickerToggle = useCallback(async (collectionId, currentFavId) => {
+    const result = await onToggleCollection(art, collectionId, currentFavId)
+    if (collectionId === activeCollectionId) {
+      setIsFav(!currentFavId)
+    }
+    return result
+  }, [art, onToggleCollection, activeCollectionId])
+
   const handleImgLoad = useCallback((e) => {
     if (!art.width || !art.height) {
       const { naturalWidth: w, naturalHeight: h } = e.currentTarget
@@ -82,8 +160,6 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   const srcLabel = PROVIDER_LABELS[art.source] || art.source.toUpperCase()
   const dims = liveDims || (art.width && art.height ? { w: art.width, h: art.height } : null)
   const res = dims ? resLabel(dims.w, dims.h, art.type) : null
-
-  const favTitle = isFav ? 'Remove from collection' : 'Add to collection'
 
   return (
     <div
@@ -125,13 +201,42 @@ function FanartItem({ art, onToggleFav, onOpen }) {
       )}
 
       <div className="fanart-overlay">
-        <button
-          className={`fanart-action-btn fav-btn ${isFav ? 'active' : ''}`}
-          onClick={handleFavClick}
-          title={favTitle}
-        >
-          <Star size={13} fill={isFav ? '#fff' : 'none'} />
-        </button>
+        {showPicker ? (
+          <div className="fav-split" ref={pickerRef}>
+            <button
+              className={`fanart-action-btn fav-btn fav-split-star ${isFav ? 'active' : ''}`}
+              onClick={handleFavClick}
+              title={isFav ? 'Remove from collection' : 'Add to collection'}
+            >
+              <Star size={13} fill={isFav ? '#fff' : 'none'} />
+            </button>
+            <button
+              className={`fanart-action-btn fav-chevron ${isFav ? 'active' : ''}`}
+              onClick={handleChevronClick}
+              title="Save to collections…"
+            >
+              <ChevronDown size={11} />
+            </button>
+            {pickerOpen && (
+              <CollectionPicker
+                artId={art.id}
+                collections={collections}
+                activeCollectionId={activeCollectionId}
+                activeFavId={art.favourite_id}
+                onToggle={handlePickerToggle}
+                onClose={() => setPickerOpen(false)}
+              />
+            )}
+          </div>
+        ) : (
+          <button
+            className={`fanart-action-btn fav-btn ${isFav ? 'active' : ''}`}
+            onClick={handleFavClick}
+            title={isFav ? 'Remove from collection' : 'Add to collection'}
+          >
+            <Star size={13} fill={isFav ? '#fff' : 'none'} />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -146,7 +251,7 @@ function groupBySource(arts) {
   return map
 }
 
-export default function FanartGrid({ grouped, onToggleFav, activeType }) {
+export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, activeType, collections, activeCollectionId }) {
   const [lightboxImg, setLightboxImg] = useState(null)
   const [lightboxFav, setLightboxFav] = useState(false)
 
@@ -161,6 +266,15 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
     setLightboxFav(nowFav)
     onToggleFav({ ...lightboxImg, favourite_id: lightboxFav ? (lightboxImg.favourite_id || 'temp') : null })
   }, [lightboxImg, lightboxFav, onToggleFav])
+
+  const handleLightboxToggleCollection = useCallback(async (art, collectionId, currentFavId) => {
+    const result = await onToggleCollection?.(art, collectionId, currentFavId)
+    if (collectionId === activeCollectionId) {
+      setLightboxFav(!currentFavId)
+      setLightboxImg(prev => prev ? { ...prev, favourite_id: currentFavId ? null : (result?.id || 'temp') } : prev)
+    }
+    return result
+  }, [onToggleCollection, activeCollectionId])
 
   const types = activeType
     ? [activeType]
@@ -212,7 +326,10 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
                       key={art.id}
                       art={art}
                       onToggleFav={onToggleFav}
+                      onToggleCollection={onToggleCollection}
                       onOpen={handleOpen}
+                      collections={collections}
+                      activeCollectionId={activeCollectionId}
                     />
                   ))}
                 </div>
@@ -228,6 +345,9 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
           isFavourite={lightboxFav}
           onClose={() => setLightboxImg(null)}
           onToggleFav={handleLightboxFav}
+          collections={collections}
+          activeCollectionId={activeCollectionId}
+          onToggleCollection={handleLightboxToggleCollection}
         />
       )}
     </>

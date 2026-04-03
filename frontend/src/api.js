@@ -60,6 +60,7 @@ export const api = {
   addFavourite: (fanart_id, media_item_id, collection_id) =>
     apiFetch('/favourites', { method: 'POST', body: JSON.stringify({ fanart_id, media_item_id, collection_id }) }),
   removeFavourite: (id) => apiFetch(`/favourites/${id}`, { method: 'DELETE' }),
+  getFanartCollections: (fanartId) => apiFetch(`/favourites/for-fanart/${fanartId}`),
   getFavouriteStats: (collection_id) => {
     const q = collection_id ? `?collection_id=${collection_id}` : ''
     return apiFetch(`/favourites/stats${q}`)

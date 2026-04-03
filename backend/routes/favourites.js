@@ -41,6 +41,12 @@ router.post('/', (req, res) => {
   }
 });
 
+// GET /api/favourites/for-fanart/:fanartId — which collections contain this fanart item
+router.get('/for-fanart/:fanartId', (req, res) => {
+  const rows = db.prepare('SELECT id, collection_id FROM favourites WHERE fanart_id = ?').all(req.params.fanartId)
+  res.json(rows)
+})
+
 // DELETE /api/favourites/:id — remove by row id (collection-scoped)
 router.delete('/:id', (req, res) => {
   const result = db.prepare('DELETE FROM favourites WHERE id=?').run(req.params.id);
