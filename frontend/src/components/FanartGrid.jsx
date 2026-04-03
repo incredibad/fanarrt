@@ -204,18 +204,18 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
         {showPicker ? (
           <div className="fav-split" ref={pickerRef}>
             <button
-              className={`fanart-action-btn fav-btn fav-split-star ${isFav ? 'active' : ''}`}
-              onClick={handleFavClick}
-              title={isFav ? 'Remove from collection' : 'Add to collection'}
-            >
-              <Star size={13} fill={isFav ? '#fff' : 'none'} />
-            </button>
-            <button
               className={`fanart-action-btn fav-chevron ${isFav ? 'active' : ''}`}
               onClick={handleChevronClick}
               title="Save to collections…"
             >
               <ChevronDown size={11} />
+            </button>
+            <button
+              className={`fanart-action-btn fav-btn fav-split-star ${isFav ? 'active' : ''}`}
+              onClick={handleFavClick}
+              title={isFav ? 'Remove from collection' : 'Add to collection'}
+            >
+              <Star size={13} fill={isFav ? '#fff' : 'none'} />
             </button>
             {pickerOpen && (
               <CollectionPicker
