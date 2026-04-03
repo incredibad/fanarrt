@@ -199,21 +199,21 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
   const idLinks = providerLinks(item)
 
-  const mobileBannerArt = fanartData.grouped?.background?.[0] || fanartData.grouped?.banner?.[0]
-  const mobileBannerSrc = mobileBannerArt
-    ? (mobileBannerArt.source === 'fanart.tv'
-        ? `/api/proxy/thumb?url=${encodeURIComponent(mobileBannerArt.url)}`
-        : (mobileBannerArt.thumbnail_url || mobileBannerArt.url))
+  const backdropArt = fanartData.grouped?.background?.[0]
+  const backdropSrc = backdropArt
+    ? (backdropArt.source === 'fanart.tv'
+        ? `/api/proxy/thumb?url=${encodeURIComponent(backdropArt.url)}`
+        : (backdropArt.thumbnail_url || backdropArt.url))
     : null
 
   return (
     <div className="scroll-area">
       {/* Hero */}
       <div className="item-hero">
-        {mobileBannerSrc && (
-          <img className="item-hero-banner-mobile" src={mobileBannerSrc} alt={item.title} />
+        {backdropSrc && (
+          <img className="item-hero-backdrop" src={backdropSrc} alt="" aria-hidden="true" />
         )}
-        <div className={`item-hero-poster ${mobileBannerSrc ? 'item-hero-poster-has-banner' : ''}`}>
+        <div className="item-hero-poster">
           {item.poster_path && !imgError ? (
             <img src={item.poster_path} alt={item.title} onError={() => setImgError(true)} />
           ) : (
