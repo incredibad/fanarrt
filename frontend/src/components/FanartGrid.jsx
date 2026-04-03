@@ -27,7 +27,7 @@ function resLabel(width, height, type) {
   return `${width}×${height}`
 }
 
-function CollectionPicker({ artId, collections, activeCollectionId, activeFavId, onToggle, onClose }) {
+export function CollectionPicker({ artId, collections, activeCollectionId, activeFavId, onToggle, onClose }) {
   const [membership, setMembership] = useState(null)
   const [loading, setLoading] = useState(true)
 
