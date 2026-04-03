@@ -688,8 +688,8 @@ body {
   background-size: cover;
   background-position: center;
   z-index: 0;
-  filter: blur(4px) brightness(0.2) saturate(0.6);
-  transform: scale(1.08);
+  filter: brightness(0.2) saturate(0.6);
+  transform: scale(1.0);
   pointer-events: none;
 }
 
