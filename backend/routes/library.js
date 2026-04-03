@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
   let where = '1=1';
   const params = [];
 
-  if (type && ['show', 'movie'].includes(type)) {
+  if (type && ['show', 'movie', 'anime'].includes(type)) {
     where += ' AND mi.type = ?';
     params.push(type);
   }

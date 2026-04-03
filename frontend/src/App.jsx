@@ -20,7 +20,7 @@ export default function App() {
   const { toasts } = useToastSetup()
   const [authState, setAuthState] = useState(AUTH_UNKNOWN)
   const [syncing, setSyncing] = useState(false)
-  const [counts, setCounts] = useState({ all: null, shows: null, movies: null, favourites: null })
+  const [counts, setCounts] = useState({ all: null, shows: null, movies: null, anime: null, favourites: null })
   const [collections, setCollections] = useState([])
   const [activeCollectionId, setActiveCollectionId] = useState(() => {
     const stored = localStorage.getItem('activeCollectionId')
@@ -57,16 +57,18 @@ export default function App() {
   async function loadCounts(collectionId) {
     const cid = collectionId ?? activeCollectionId
     try {
-      const [all, shows, movies, favStats] = await Promise.all([
+      const [all, shows, movies, anime, favStats] = await Promise.all([
         api.getLibrary({ limit: 1 }),
         api.getLibrary({ limit: 1, type: 'show' }),
         api.getLibrary({ limit: 1, type: 'movie' }),
+        api.getLibrary({ limit: 1, type: 'anime' }),
         api.getFavouriteStats(cid),
       ])
       setCounts({
         all: all.total,
         shows: shows.total,
         movies: movies.total,
+        anime: anime.total,
         favourites: favStats.reduce((sum, s) => sum + s.count, 0),
       })
     } catch {}
@@ -192,6 +194,7 @@ export default function App() {
           <Route path="/" element={<LibraryPage activeCollectionId={activeCollectionId} />} />
           <Route path="/shows" element={<LibraryPage typeFilter="show" activeCollectionId={activeCollectionId} />} />
           <Route path="/movies" element={<LibraryPage typeFilter="movie" activeCollectionId={activeCollectionId} />} />
+          <Route path="/anime" element={<LibraryPage typeFilter="anime" activeCollectionId={activeCollectionId} />} />
           <Route path="/item/:id" element={
             <ItemPage
               onFavCountChange={handleFavCountChange}

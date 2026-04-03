@@ -95,6 +95,11 @@ router.get('/download/movies', async (req, res) => {
   await downloadTypeFavourites('movie', res);
 });
 
+// GET /api/favourites/download/anime
+router.get('/download/anime', async (req, res) => {
+  await downloadTypeFavourites('anime', res);
+});
+
 // GET /api/favourites/download/:mediaItemId
 router.get('/download/:mediaItemId', async (req, res) => {
   await downloadItemFavourites(req.params.mediaItemId, res);

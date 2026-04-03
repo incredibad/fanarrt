@@ -118,6 +118,39 @@ try {
   db.exec(`ALTER TABLE media_items ADD COLUMN fanart_fetched_at DATETIME`);
 } catch {}
 
+// Add 'anime' to media_items type constraint
+const mediaTableSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='media_items'").get();
+if (mediaTableSql && !mediaTableSql.sql.includes("'anime'")) {
+  db.exec(`
+    BEGIN;
+    CREATE TABLE media_items_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('show', 'movie', 'anime')),
+      title TEXT NOT NULL,
+      year INTEGER,
+      tvdb_id TEXT,
+      tmdb_id TEXT,
+      imdb_id TEXT,
+      sonarr_id TEXT,
+      radarr_id TEXT,
+      poster_path TEXT,
+      overview TEXT,
+      status TEXT DEFAULT 'active',
+      last_synced DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      fanart_fetched_at DATETIME,
+      UNIQUE(type, sonarr_id),
+      UNIQUE(type, radarr_id)
+    );
+    INSERT OR IGNORE INTO media_items_new SELECT * FROM media_items;
+    DROP TABLE media_items;
+    ALTER TABLE media_items_new RENAME TO media_items;
+    CREATE INDEX IF NOT EXISTS idx_media_type ON media_items(type);
+    COMMIT;
+  `);
+  console.log('DB migration: media_items type constraint updated to include anime');
+}
+
 // Fix the source CHECK constraint to include 'fanart.tv'.
 // SQLite doesn't support ALTER COLUMN so we recreate the table if needed.
 const fanartTableSql = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='fanart'`).get();
