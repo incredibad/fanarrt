@@ -113,6 +113,11 @@ body {
   flex: 1;
 }
 
+.sidebar-footer {
+  padding: 10px 10px 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
 .nav-section-label {
   font-size: 10px;
   font-weight: 600;
