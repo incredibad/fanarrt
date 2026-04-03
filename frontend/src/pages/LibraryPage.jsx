@@ -202,7 +202,7 @@ function MediaCard({ item, dataLetter }) {
           </div>
         )}
         <span className={`media-card-type-badge badge-${item.type}`}>
-          {item.type === 'show' ? 'TV' : 'Movie'}
+          {item.type === 'show' ? 'TV' : item.type === 'anime' ? 'Anime' : 'Movie'}
         </span>
         {item.favourite_count > 0 && (
           <span className="fav-count-badge"><Star size={9} fill="#fff" />{item.favourite_count}</span>
