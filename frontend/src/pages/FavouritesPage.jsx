@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check } from 'lucide-react'
+import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import DownloadMenu from '../components/DownloadMenu'
 import Lightbox from '../components/Lightbox'
+import { CollectionPicker } from '../components/FanartGrid'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
-export default function FavouritesPage({ onFavCountChange, activeCollection, onCollectionRename, onCollectionDelete }) {
-  const activeCollectionId = activeCollection?.id
+export default function FavouritesPage({ onFavCountChange, activeCollection, activeCollectionId, collections = [], onCollectionRename, onCollectionDelete }) {
   const navigate = useNavigate()
 
   const [allFavs, setAllFavs] = useState([])
@@ -98,6 +98,31 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, onC
       onFavCountChange?.(-1)
     } catch (e) {
       toast(e.message, 'error')
+    }
+  }
+
+  const handleToggleCollection = async (fav, collectionId, currentFavId) => {
+    try {
+      if (currentFavId) {
+        await api.removeFavourite(currentFavId)
+        if (collectionId === activeCollectionId) {
+          setAllFavs(prev => prev.filter(f => f.id !== fav.id))
+          setStats(prev =>
+            prev.map(s => s.id === fav.media_item_id ? { ...s, count: s.count - 1 } : s)
+                .filter(s => s.count > 0)
+          )
+          if (lightbox?.id === fav.id) setLightbox(null)
+          toast('Removed from collection', 'info')
+          onFavCountChange?.(-1)
+        }
+        return null
+      } else {
+        const result = await api.addFavourite(fav.fanart_id, fav.media_item_id, collectionId)
+        return result
+      }
+    } catch (e) {
+      toast(e.message, 'error')
+      return null
     }
   }
 
@@ -321,7 +346,14 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, onC
                   <p>Select a title or adjust your filters.</p>
                 </div>
               ) : (
-                <GroupedFavGrid favs={displayedFavs} onRemove={handleRemove} onOpen={setLightbox} />
+                <GroupedFavGrid
+                  favs={displayedFavs}
+                  onRemove={handleRemove}
+                  onOpen={setLightbox}
+                  collections={collections}
+                  activeCollectionId={activeCollectionId}
+                  onToggleCollection={handleToggleCollection}
+                />
               )}
             </div>
           </div>
@@ -330,10 +362,15 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, onC
 
       {lightbox && (
         <Lightbox
-          image={{ ...lightbox, url: lightbox.url }}
+          image={{ ...lightbox, id: lightbox.fanart_id }}
           isFavourite={true}
           onClose={() => setLightbox(null)}
           onToggleFav={() => handleRemove(lightbox)}
+          collections={collections}
+          activeCollectionId={activeCollectionId}
+          onToggleCollection={(art, collectionId, currentFavId) =>
+            handleToggleCollection(lightbox, collectionId, currentFavId)
+          }
         />
       )}
 
@@ -370,7 +407,7 @@ function resLabel(w, h, type) {
   return `${w}×${h}`
 }
 
-function GroupedFavGrid({ favs, onRemove, onOpen }) {
+function GroupedFavGrid({ favs, onRemove, onOpen, collections, activeCollectionId, onToggleCollection }) {
   const grouped = {}
   for (const fav of favs) {
     const t = fav.type || 'other'
@@ -399,6 +436,9 @@ function GroupedFavGrid({ favs, onRemove, onOpen }) {
                 fav={fav}
                 onRemove={() => onRemove(fav)}
                 onOpen={() => onOpen(fav)}
+                collections={collections}
+                activeCollectionId={activeCollectionId}
+                onToggleCollection={onToggleCollection}
               />
             ))}
           </div>
@@ -408,8 +448,20 @@ function GroupedFavGrid({ favs, onRemove, onOpen }) {
   )
 }
 
-function FavCard({ fav, onRemove, onOpen }) {
+function FavCard({ fav, onRemove, onOpen, collections, activeCollectionId, onToggleCollection }) {
   const [imgError, setImgError] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const pickerRef = useRef(null)
+  const showPicker = collections?.length > 1
+
+  useEffect(() => {
+    if (!pickerOpen) return
+    const handler = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pickerOpen])
   const isBanner = fav.type === 'banner'
   const isWide   = fav.type === 'background'
   const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(fav.type)
@@ -459,13 +511,42 @@ function FavCard({ fav, onRemove, onOpen }) {
       <div className="fanart-fav-indicator"><Star size={11} fill="#fff" /></div>
 
       <div className="fanart-overlay">
-        <button
-          className="fanart-action-btn fav-btn active"
-          onClick={e => { e.stopPropagation(); onRemove() }}
-          title="Remove from collection"
-        >
-          <Star size={13} fill="#fff" />
-        </button>
+        {showPicker ? (
+          <div className="fav-split" ref={pickerRef}>
+            <button
+              className="fanart-action-btn fav-chevron active"
+              onClick={e => { e.stopPropagation(); setPickerOpen(o => !o) }}
+              title="Save to collections…"
+            >
+              <ChevronDown size={11} />
+            </button>
+            <button
+              className="fanart-action-btn fav-btn fav-split-star active"
+              onClick={e => { e.stopPropagation(); onRemove() }}
+              title="Remove from collection"
+            >
+              <Star size={13} fill="#fff" />
+            </button>
+            {pickerOpen && (
+              <CollectionPicker
+                artId={fav.fanart_id}
+                collections={collections}
+                activeCollectionId={activeCollectionId}
+                activeFavId={fav.id}
+                onToggle={(collectionId, currentFavId) => onToggleCollection(fav, collectionId, currentFavId)}
+                onClose={() => setPickerOpen(false)}
+              />
+            )}
+          </div>
+        ) : (
+          <button
+            className="fanart-action-btn fav-btn active"
+            onClick={e => { e.stopPropagation(); onRemove() }}
+            title="Remove from collection"
+          >
+            <Star size={13} fill="#fff" />
+          </button>
+        )}
       </div>
     </div>
   )

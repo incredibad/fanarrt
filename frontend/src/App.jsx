@@ -199,6 +199,8 @@ export default function App() {
             <FavouritesPage
               onFavCountChange={handleFavCountChange}
               activeCollection={activeCollection}
+              activeCollectionId={activeCollectionId}
+              collections={collections}
               onCollectionRename={handleCollectionRename}
               onCollectionDelete={handleCollectionDelete}
             />
