@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Zap, Loader, LogOut, KeyRound, Server, Database, User } from 'lucide-react'
+import { Save, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 
@@ -16,34 +16,44 @@ const TABS = [
   { id: 'account',   label: 'Account',       icon: User },
 ]
 
+const TYPE_MODE_LABELS = { auto: 'Auto', show: 'Shows Only', anime: 'Anime Only' }
+
 export default function SettingsPage({ onLogout }) {
   const [tab, setTab] = useState('servers')
   const [form, setForm] = useState({
-    sonarr_url: '', sonarr_api_key: '',
-    radarr_url: '', radarr_api_key: '',
     tvdb_api_key: '', tvdb_pin: '',
     tmdb_api_key: '',
     fanart_api_key: '',
   })
   const DEFAULT_ORDER = ['fanart.tv', 'tvdb', 'tmdb']
   const [providerOrder, setProviderOrder] = useState(DEFAULT_ORDER)
+  const [sonarrInstances, setSonarrInstances] = useState([])
+  const [radarrInstances, setRadarrInstances] = useState([])
+  const [instanceStatus, setInstanceStatus] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [connStatus, setConnStatus] = useState({ sonarr: null, radarr: null })
 
   useEffect(() => {
     api.getSettings()
       .then(data => {
-        setForm(prev => ({ ...prev, ...data }))
+        setForm(prev => ({
+          ...prev,
+          tvdb_api_key: data.tvdb_api_key || '',
+          tvdb_pin: data.tvdb_pin || '',
+          tmdb_api_key: data.tmdb_api_key || '',
+          fanart_api_key: data.fanart_api_key || '',
+        }))
         if (Array.isArray(data.provider_order) && data.provider_order.length) {
           setProviderOrder(data.provider_order)
         }
+        if (Array.isArray(data.sonarr_instances)) setSonarrInstances(data.sonarr_instances)
+        if (Array.isArray(data.radarr_instances)) setRadarrInstances(data.radarr_instances)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
-  const handleSave = async () => {
+  const handleSaveProviders = async () => {
     setSaving(true)
     try {
       await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder) })
@@ -65,16 +75,34 @@ export default function SettingsPage({ onLogout }) {
     })
   }
 
-  const handleTest = async (svc) => {
-    try { await api.saveSettings(form) } catch {}
-    setConnStatus(prev => ({ ...prev, [svc]: 'testing' }))
+  const saveInstances = async (arrType, instances) => {
+    const key = arrType === 'sonarr' ? 'sonarr_instances' : 'radarr_instances'
     try {
-      const result = await api.testConnection(svc)
-      setConnStatus(prev => ({ ...prev, [svc]: result }))
-      if (result.ok) toast(`${svc} connected — v${result.version}`, 'success')
-      else toast(`${svc} failed: ${result.error}`, 'error')
+      await api.saveSettings({ [key]: instances })
     } catch (e) {
-      setConnStatus(prev => ({ ...prev, [svc]: { ok: false, error: e.message } }))
+      toast(e.message, 'error')
+    }
+  }
+
+  const handleInstanceChange = async (arrType, newInstances) => {
+    if (arrType === 'sonarr') setSonarrInstances(newInstances)
+    else setRadarrInstances(newInstances)
+    await saveInstances(arrType, newInstances)
+  }
+
+  const handleTestInstance = async (arrType, instanceId, url, apiKey) => {
+    const key = `${arrType}-${instanceId}`
+    setInstanceStatus(prev => ({ ...prev, [key]: 'testing' }))
+    try {
+      // If the user typed a new api key, test with it directly; otherwise use the stored key
+      const result = apiKey
+        ? await api.testInstanceConnection(url, apiKey)
+        : await api.testSavedInstance(arrType, instanceId)
+      setInstanceStatus(prev => ({ ...prev, [key]: result }))
+      if (result.ok) toast(`Connected — v${result.version}`, 'success')
+      else toast(`Connection failed: ${result.error}`, 'error')
+    } catch (e) {
+      setInstanceStatus(prev => ({ ...prev, [key]: { ok: false, error: e.message } }))
     }
   }
 
@@ -89,9 +117,9 @@ export default function SettingsPage({ onLogout }) {
           <h1 className="page-title">Settings</h1>
           <p className="page-subtitle">Configure your media server and API connections</p>
         </div>
-        {tab !== 'account' && (
+        {tab === 'providers' && (
           <div className="page-actions">
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            <button className="btn btn-primary" onClick={handleSaveProviders} disabled={saving}>
               <Save size={14} />
               {saving ? 'Saving…' : 'Save Settings'}
             </button>
@@ -121,54 +149,32 @@ export default function SettingsPage({ onLogout }) {
         <div style={{ padding: '0 32px 32px' }}>
           <div className="settings-grid">
             <div className="settings-section">
-              <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>📺</span> Sonarr
-                <ConnectionStatus status={connStatus.sonarr} />
-              </div>
-              <div className="form-field">
-                <label className="form-label">URL</label>
-                <input className="form-input" value={form.sonarr_url} onChange={set('sonarr_url')}
-                  placeholder="http://localhost:8989" />
-                <div className="form-hint">Include protocol and port, no trailing slash</div>
-              </div>
-              <div className="form-field">
-                <label className="form-label">API Key</label>
-                <input className="form-input" type="password" value={form.sonarr_api_key} onChange={set('sonarr_api_key')}
-                  placeholder="Your Sonarr API key" />
-                <div className="form-hint">Found in Sonarr → Settings → General</div>
-              </div>
-              <button className="btn btn-secondary btn-sm" onClick={() => handleTest('sonarr')}>
-                <Zap size={13} /> Test Connection
-              </button>
+              <div className="settings-section-title"><span style={{ fontSize: 16 }}>📺</span> Sonarr</div>
+              <InstanceManager
+                arrType="sonarr"
+                instances={sonarrInstances}
+                instanceStatus={instanceStatus}
+                onChange={(instances) => handleInstanceChange('sonarr', instances)}
+                onTest={handleTestInstance}
+              />
             </div>
 
             <div className="settings-section">
-              <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>🎬</span> Radarr
-                <ConnectionStatus status={connStatus.radarr} />
-              </div>
-              <div className="form-field">
-                <label className="form-label">URL</label>
-                <input className="form-input" value={form.radarr_url} onChange={set('radarr_url')}
-                  placeholder="http://localhost:7878" />
-              </div>
-              <div className="form-field">
-                <label className="form-label">API Key</label>
-                <input className="form-input" type="password" value={form.radarr_api_key} onChange={set('radarr_api_key')}
-                  placeholder="Your Radarr API key" />
-                <div className="form-hint">Found in Radarr → Settings → General</div>
-              </div>
-              <button className="btn btn-secondary btn-sm" onClick={() => handleTest('radarr')}>
-                <Zap size={13} /> Test Connection
-              </button>
+              <div className="settings-section-title"><span style={{ fontSize: 16 }}>🎬</span> Radarr</div>
+              <InstanceManager
+                arrType="radarr"
+                instances={radarrInstances}
+                instanceStatus={instanceStatus}
+                onChange={(instances) => handleInstanceChange('radarr', instances)}
+                onTest={handleTestInstance}
+              />
             </div>
           </div>
 
           <div className="settings-section" style={{ marginTop: 24, maxWidth: '100%' }}>
             <div className="settings-section-title">🚀 Getting Started</div>
             <ol style={{ paddingLeft: 18, color: 'var(--text-2)', fontSize: 13.5, lineHeight: 2 }}>
-              <li>Enter your Sonarr and/or Radarr URLs and API keys above, then click <strong>Save Settings</strong></li>
-              <li>Test each connection using the Test button</li>
+              <li>Add your Sonarr and/or Radarr instances above and test each connection</li>
               <li>Add your TheTVDB and/or TMDB API keys on the Providers tab (both are free)</li>
               <li>Click <strong>Sync Library</strong> in the sidebar to import your media</li>
               <li>Browse to any title and click <strong>Fetch Fanart</strong> to load artwork</li>
@@ -270,7 +276,6 @@ export default function SettingsPage({ onLogout }) {
         <div style={{ padding: '0 32px 32px' }}>
           <div className="settings-grid">
             <ChangePasswordSection />
-
             <div className="settings-section">
               <div className="settings-section-title">
                 <LogOut size={14} /> Sign Out
@@ -288,6 +293,154 @@ export default function SettingsPage({ onLogout }) {
     </div>
   )
 }
+
+// ── Instance Manager ───────────────────────────────────────────────────────────
+
+function InstanceManager({ arrType, instances, instanceStatus, onChange, onTest }) {
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({})
+
+  const startEdit = (inst) => {
+    setEditingId(inst.id)
+    setEditForm({ label: inst.label || '', url: inst.url || '', api_key: '', type_mode: inst.type_mode || 'auto' })
+  }
+
+  const handleAdd = () => {
+    const newId = Date.now().toString()
+    const newInst = { id: newId, label: '', url: '', api_key: '', type_mode: 'auto' }
+    const updated = [...instances, newInst]
+    onChange(updated)
+    startEdit(newInst)
+  }
+
+  const handleSave = (instId) => {
+    const updated = instances.map(inst =>
+      inst.id === instId ? { ...inst, ...editForm } : inst
+    )
+    onChange(updated)
+    setEditingId(null)
+  }
+
+  const handleDelete = (instId) => {
+    onChange(instances.filter(inst => inst.id !== instId))
+    if (editingId === instId) setEditingId(null)
+  }
+
+  const handleCancel = (instId) => {
+    // If this was a brand-new unsaved instance (no URL), remove it on cancel
+    const inst = instances.find(i => i.id === instId)
+    if (inst && !inst.url) {
+      onChange(instances.filter(i => i.id !== instId))
+    }
+    setEditingId(null)
+  }
+
+  const handleTest = (instId) => {
+    const inst = instances.find(i => i.id === instId)
+    const url = editForm.url || inst?.url || ''
+    const apiKey = editForm.api_key || ''
+    onTest(arrType, instId, url, apiKey)
+  }
+
+  const setField = (k) => (e) => setEditForm(prev => ({ ...prev, [k]: e.target.value }))
+
+  const placeholder = arrType === 'sonarr' ? 'http://localhost:8989' : 'http://localhost:7878'
+
+  return (
+    <div>
+      {instances.length === 0 && (
+        <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>No instances configured yet.</p>
+      )}
+
+      {instances.map(inst => {
+        const statusKey = `${arrType}-${inst.id}`
+        const isEditing = editingId === inst.id
+
+        if (isEditing) {
+          return (
+            <div key={inst.id} className="instance-card instance-card-editing">
+              <div className="form-field">
+                <label className="form-label">Label</label>
+                <input className="form-input" value={editForm.label} onChange={setField('label')}
+                  placeholder={arrType === 'sonarr' ? 'e.g. Main Sonarr' : 'e.g. Main Radarr'} />
+              </div>
+              <div className="form-field">
+                <label className="form-label">URL</label>
+                <input className="form-input" value={editForm.url} onChange={setField('url')}
+                  placeholder={placeholder} />
+                <div className="form-hint">Include protocol and port, no trailing slash</div>
+              </div>
+              <div className="form-field">
+                <label className="form-label">API Key</label>
+                <input className="form-input" type="password" value={editForm.api_key} onChange={setField('api_key')}
+                  placeholder={inst.url ? 'Leave blank to keep existing key' : `Your ${arrType === 'sonarr' ? 'Sonarr' : 'Radarr'} API key`} />
+                <div className="form-hint">
+                  Found in {arrType === 'sonarr' ? 'Sonarr' : 'Radarr'} → Settings → General
+                </div>
+              </div>
+              {arrType === 'sonarr' && (
+                <div className="form-field">
+                  <label className="form-label">Type Mode</label>
+                  <select className="form-input" value={editForm.type_mode} onChange={setField('type_mode')}>
+                    <option value="auto">Auto — use Sonarr series type per show</option>
+                    <option value="show">Shows Only — treat all as TV shows</option>
+                    <option value="anime">Anime Only — treat all as anime</option>
+                  </select>
+                  <div className="form-hint">Controls how items from this instance are classified in Fanarrt</div>
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => handleTest(inst.id)}>
+                  <Zap size={13} /> Test
+                </button>
+                <ConnectionStatus status={instanceStatus[statusKey]} />
+                <div style={{ flex: 1 }} />
+                <button className="btn btn-ghost btn-sm" onClick={() => handleCancel(inst.id)}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={() => handleSave(inst.id)}
+                  disabled={!editForm.url}>
+                  Save
+                </button>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div key={inst.id} className="instance-card">
+            <div className="instance-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <ConnectionStatus status={instanceStatus[statusKey]} />
+                <span className="instance-card-label">{inst.label || 'Unnamed'}</span>
+                {arrType === 'sonarr' && inst.type_mode && inst.type_mode !== 'auto' && (
+                  <span className={`instance-type-badge type-mode-${inst.type_mode}`}>
+                    {TYPE_MODE_LABELS[inst.type_mode]}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => startEdit(inst)} title="Edit">
+                  <ChevronDown size={13} />
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(inst.id)} title="Remove"
+                  style={{ color: 'var(--text-3)' }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+            <div className="instance-card-url">{inst.url || <em style={{ color: 'var(--text-3)' }}>No URL set</em>}</div>
+          </div>
+        )
+      })}
+
+      <button className="btn btn-ghost btn-sm" onClick={handleAdd}
+        style={{ marginTop: 8, color: 'var(--text-3)', width: '100%', justifyContent: 'center', borderStyle: 'dashed' }}>
+        <Plus size={13} /> Add {arrType === 'sonarr' ? 'Sonarr' : 'Radarr'} Instance
+      </button>
+    </div>
+  )
+}
+
+// ── Change password ────────────────────────────────────────────────────────────
 
 function ChangePasswordSection() {
   const [current, setCurrent] = useState('')
