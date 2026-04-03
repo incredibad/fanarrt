@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap } from 'lucide-react'
 import { api } from '../api'
@@ -328,16 +329,19 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         activeCollectionId={activeCollectionId}
       />
 
-      {/* Mobile-only floating refresh FAB */}
-      <button
-        className="item-refresh-fab"
-        onClick={handleFetchFanart}
-        disabled={fetching || autoFetching}
-        title={fetching || autoFetching ? 'Fetching…' : 'Refresh Fanart'}
-        aria-label="Refresh Fanart"
-      >
-        <RefreshCw size={20} style={{ animation: (fetching || autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
-      </button>
+      {/* Mobile-only floating refresh FAB — portalled to body to escape overflow:hidden */}
+      {createPortal(
+        <button
+          className="item-refresh-fab"
+          onClick={handleFetchFanart}
+          disabled={fetching || autoFetching}
+          title={fetching || autoFetching ? 'Fetching…' : 'Refresh Fanart'}
+          aria-label="Refresh Fanart"
+        >
+          <RefreshCw size={20} style={{ animation: (fetching || autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
+        </button>,
+        document.body
+      )}
     </div>
   )
 }
