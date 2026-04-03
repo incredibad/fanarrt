@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
-import { X, Star, Download } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { X, Star, Download, ChevronDown, Check } from 'lucide-react'
+import { api } from '../api'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv' }
 
@@ -18,7 +19,6 @@ function resLabel(width, height, type) {
 }
 
 function getFilename(image) {
-  // Derive a sensible filename from the URL
   try {
     const url = new URL(image.url)
     const parts = url.pathname.split('/')
@@ -30,8 +30,6 @@ function getFilename(image) {
 }
 
 async function downloadImage(url, filename) {
-  // Route through our proxy so the fetch is same-origin and the blob download works.
-  // The proxy handles all image types (fanart.tv AND direct URLs via redirect).
   const proxyUrl = `/api/proxy/poster?url=${encodeURIComponent(url)}`
   try {
     const res = await fetch(proxyUrl, { credentials: 'include' })
@@ -46,17 +44,59 @@ async function downloadImage(url, filename) {
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(href), 1000)
   } catch {
-    // Last resort: open in new tab
     window.open(url, '_blank')
   }
 }
 
-export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
+export default function Lightbox({ image, isFavourite, onClose, onToggleFav, collections, activeCollectionId, onToggleCollection }) {
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [membership, setMembership] = useState(null)
+  const [membershipLoading, setMembershipLoading] = useState(false)
+  const pickerRef = useRef(null)
+
+  const showPicker = collections?.length > 1
+
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    const handler = (e) => { if (e.key === 'Escape') { if (pickerOpen) setPickerOpen(false); else onClose() } }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [onClose, pickerOpen])
+
+  useEffect(() => {
+    if (!pickerOpen) return
+    const handler = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pickerOpen])
+
+  const handleChevronClick = async () => {
+    if (pickerOpen) { setPickerOpen(false); return }
+    setPickerOpen(true)
+    setMembershipLoading(true)
+    try {
+      const rows = await api.getFanartCollections(image.id)
+      const map = {}
+      for (const col of collections) map[col.id] = null
+      for (const r of rows) map[r.collection_id] = r.id
+      if (isFavourite && image.favourite_id) map[activeCollectionId] = image.favourite_id
+      else if (!isFavourite) map[activeCollectionId] = null
+      setMembership(map)
+    } catch {}
+    setMembershipLoading(false)
+  }
+
+  const handlePickerToggle = async (e, col) => {
+    e.stopPropagation()
+    const currentFavId = membership?.[col.id] || null
+    setMembership(prev => ({ ...prev, [col.id]: currentFavId ? null : 'pending' }))
+    const result = await onToggleCollection(image, col.id, currentFavId)
+    setMembership(prev => ({
+      ...prev,
+      [col.id]: currentFavId ? null : (result?.id || 'temp'),
+    }))
+  }
 
   if (!image) return null
 
@@ -65,7 +105,7 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
   const filename = getFilename(image)
 
   return (
-    <div className="lightbox" onClick={onClose}>
+    <div className="lightbox" onClick={pickerOpen ? () => setPickerOpen(false) : onClose}>
       <button className="lightbox-close" onClick={onClose} title="Close (Esc)">
         <X size={18} />
       </button>
@@ -79,13 +119,52 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
 
       {/* Bottom action bar */}
       <div className="lightbox-actions" onClick={e => e.stopPropagation()}>
-        <button
-          className={`btn ${isFavourite ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={onToggleFav}
-        >
-          <Star size={14} fill={isFavourite ? '#fff' : 'none'} />
-          {isFavourite ? 'Remove from collection' : 'Add to collection'}
-        </button>
+        {showPicker ? (
+          <div className="lightbox-picker" ref={pickerRef}>
+            <button
+              className={`btn ${isFavourite ? 'btn-primary' : 'btn-secondary'} lightbox-picker-star`}
+              onClick={onToggleFav}
+            >
+              <Star size={14} fill={isFavourite ? '#fff' : 'none'} />
+              {isFavourite ? 'Remove from collection' : 'Add to collection'}
+            </button>
+            <button
+              className={`btn ${isFavourite ? 'btn-primary' : 'btn-secondary'} lightbox-picker-chevron`}
+              onClick={handleChevronClick}
+              title="Save to collections…"
+            >
+              <ChevronDown size={14} />
+            </button>
+            {pickerOpen && (
+              <div className="collection-picker-dropdown lightbox-picker-dropdown" onClick={e => e.stopPropagation()}>
+                {membershipLoading ? (
+                  <div className="collection-picker-loading">Loading…</div>
+                ) : collections.map(col => {
+                  const inCol = !!membership?.[col.id]
+                  return (
+                    <button
+                      key={col.id}
+                      className={`collection-picker-item ${inCol ? 'in-collection' : ''}`}
+                      onClick={(e) => handlePickerToggle(e, col)}
+                    >
+                      <span className="collection-picker-check">{inCol && <Check size={11} />}</span>
+                      <span>{col.name}</span>
+                      {col.id === activeCollectionId && <span className="collection-picker-badge">active</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            className={`btn ${isFavourite ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={onToggleFav}
+          >
+            <Star size={14} fill={isFavourite ? '#fff' : 'none'} />
+            {isFavourite ? 'Remove from collection' : 'Add to collection'}
+          </button>
+        )}
 
         <button
           className="btn btn-secondary"
@@ -97,7 +176,10 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav }) {
         </button>
       </div>
 
-      {/* Top-left meta chips — z-index above image */}
+      {/* Mobile backdrop for collection picker */}
+      {pickerOpen && <div className="collection-picker-backdrop" onClick={() => setPickerOpen(false)} />}
+
+      {/* Top-left meta chips */}
       <div style={{
         position: 'absolute', top: 20, left: 20,
         display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center',

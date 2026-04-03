@@ -49,7 +49,7 @@ function providerLinks(item) {
 
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
-export default function ItemPage({ onFavCountChange, activeCollectionId }) {
+export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
   const { id } = useParams()
   const [item, setItem] = useState(null)
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
@@ -142,6 +142,38 @@ export default function ItemPage({ onFavCountChange, activeCollectionId }) {
       }
     } catch (e) {
       toast(e.message, 'error')
+    }
+  }, [item, activeCollectionId, onFavCountChange])
+
+  // Toggle membership in any specific collection (used by the collection picker)
+  const handleToggleCollection = useCallback(async (art, collectionId, currentFavId) => {
+    try {
+      if (currentFavId) {
+        await api.removeFavourite(currentFavId)
+        if (collectionId === activeCollectionId) {
+          setFavCount(c => Math.max(0, c - 1))
+          onFavCountChange?.(-1)
+          setFanartData(prev => ({
+            ...prev,
+            fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: null } : f),
+          }))
+        }
+        return null
+      } else {
+        const result = await api.addFavourite(art.id, item?.id, collectionId)
+        if (collectionId === activeCollectionId) {
+          setFavCount(c => c + 1)
+          onFavCountChange?.(+1)
+          setFanartData(prev => ({
+            ...prev,
+            fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: result?.id || 'temp' } : f),
+          }))
+        }
+        return result
+      }
+    } catch (e) {
+      toast(e.message, 'error')
+      return null
     }
   }, [item, activeCollectionId, onFavCountChange])
 
@@ -284,7 +316,10 @@ export default function ItemPage({ onFavCountChange, activeCollectionId }) {
       <FanartGrid
         grouped={filteredGrouped}
         onToggleFav={handleToggleFav}
+        onToggleCollection={handleToggleCollection}
         activeType={activeType === 'all' ? null : activeType}
+        collections={collections}
+        activeCollectionId={activeCollectionId}
       />
     </div>
   )

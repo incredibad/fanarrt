@@ -192,6 +192,7 @@ export default function App() {
             <ItemPage
               onFavCountChange={handleFavCountChange}
               activeCollectionId={activeCollectionId}
+              collections={collections}
             />
           } />
           <Route path="/favourites" element={
