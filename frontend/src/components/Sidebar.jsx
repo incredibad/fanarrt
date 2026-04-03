@@ -138,13 +138,16 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
             </button>
           )}
 
-          <div className="nav-section-label" style={{ marginTop: 8 }}>System</div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="nav-section-label">System</div>
           <button className="nav-item" onClick={() => { onSync(); setMobileOpen(false) }} disabled={syncing}>
             <RefreshCw size={15} style={{ animation: syncing ? 'spin 0.7s linear infinite' : 'none', flexShrink: 0 }} />
             <span className="nav-label">{syncing ? 'Syncing…' : 'Sync Library'}</span>
           </button>
           {navItem('/settings', <Settings size={15} />, 'Settings', null)}
-        </nav>
+        </div>
       </aside>
     </>
   )
