@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link, useLocation } from 'react-router-dom'
-import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap, AlertTriangle } from 'lucide-react'
 import { api } from '../api'
 import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
 import DownloadMenu from '../components/DownloadMenu'
@@ -238,7 +238,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
             <h1 className="item-hero-title">{item.title}</h1>
             {item.year && <span className="item-hero-year" style={{ marginTop: 0 }}>{item.year}</span>}
             <span className={`media-card-type-badge badge-${item.type}`} style={{ position: 'static', flexShrink: 0 }}>
-              {item.type === 'show' ? 'TV Show' : 'Movie'}
+              {item.type === 'show' ? 'TV Show' : item.type === 'anime' ? 'Anime' : 'Movie'}
             </span>
           </div>
 
@@ -254,6 +254,23 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
               <span className="tag tag-fav">
                 <Star size={10} style={{ display:'inline', marginRight:3 }} />
                 {favCount} in collection
+              </span>
+            )}
+            {item.sources?.length === 1 && (
+              <span className="tag source-badge">
+                {item.sources[0].instance_label}
+              </span>
+            )}
+            {item.sources?.length > 1 && (
+              <span className="tag source-badge source-badge-shared"
+                title={item.sources.map(s => s.instance_label).join(', ')}>
+                In {item.sources.length} instances
+              </span>
+            )}
+            {item.type_conflict && (
+              <span className="source-conflict-icon"
+                title="This item's type classification differs between instances — the most recently synced value is shown.">
+                <AlertTriangle size={13} />
               </span>
             )}
           </div>

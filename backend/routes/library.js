@@ -56,7 +56,17 @@ router.get('/:id', (req, res) => {
   `).get(req.params.id);
 
   if (!item) return res.status(404).json({ error: 'Not found' });
-  res.json(item);
+
+  const sources = db.prepare(`
+    SELECT instance_label, arr_type, instance_id, assigned_type
+    FROM media_item_sources WHERE media_item_id = ?
+    ORDER BY arr_type, instance_label
+  `).all(req.params.id);
+
+  const assignedTypes = [...new Set(sources.map(s => s.assigned_type))];
+  const type_conflict = assignedTypes.length > 1;
+
+  res.json({ ...item, sources, type_conflict });
 });
 
 // GET /api/library/:id/fanart

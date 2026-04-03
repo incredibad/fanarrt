@@ -28,6 +28,10 @@ export const api = {
   getSettings: () => apiFetch('/settings'),
   saveSettings: (data) => apiFetch('/settings', { method: 'POST', body: JSON.stringify(data) }),
   testConnection: (svc) => apiFetch(`/settings/test/${svc}`, { method: 'POST' }),
+  testInstanceConnection: (url, apiKey) =>
+    apiFetch('/settings/test-connection', { method: 'POST', body: JSON.stringify({ url, api_key: apiKey }) }),
+  testSavedInstance: (arrType, instanceId) =>
+    apiFetch(`/settings/test-instance/${arrType}/${instanceId}`, { method: 'POST' }),
 
   // Library
   getLibrary: (params = {}) => {
