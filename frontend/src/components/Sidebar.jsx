@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate, useLocation, useMatch } from 'react-router-dom'
 import { Film, Tv, Settings, RefreshCw, LayoutGrid, PanelLeftOpen, PanelLeftClose,
-         FolderOpen, Plus, Check, X } from 'lucide-react'
+         FolderOpen, Plus, Check, X, Sparkles } from 'lucide-react'
 
 export default function Sidebar({ onSync, syncing, counts = {}, collections = [],
   activeCollectionId, onCollectionChange, onCollectionCreate }) {
@@ -89,6 +89,7 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
           <div className="nav-section-label">Library</div>
           {navItem('/', <LayoutGrid size={15} />, 'All Media', counts.all, true)}
           {navItem('/shows', <Tv size={15} />, 'TV Shows', counts.shows)}
+          {navItem('/anime', <Sparkles size={15} />, 'Anime', counts.anime)}
           {navItem('/movies', <Film size={15} />, 'Movies', counts.movies)}
 
           <div className="nav-section-label" style={{ marginTop: 8 }}>Collections</div>

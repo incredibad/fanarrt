@@ -228,10 +228,10 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         </div>
 
         <div className="item-hero-info">
-          <Link to={backTo || (item.type === 'show' ? '/shows' : '/movies')} className="back-btn"
+          <Link to={backTo || (item.type === 'anime' ? '/anime' : item.type === 'show' ? '/shows' : '/movies')} className="back-btn"
             style={{ marginBottom: 8, display: 'inline-flex' }}>
             <ArrowLeft size={12} />
-            {backTo === '/' ? 'All Media' : backTo === '/shows' ? 'TV Shows' : 'Movies'}
+            {backTo === '/' ? 'All Media' : backTo === '/shows' ? 'TV Shows' : backTo === '/anime' ? 'Anime' : 'Movies'}
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>

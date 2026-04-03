@@ -34,6 +34,11 @@ const upsertMedia = db.prepare(`
   RETURNING id
 `);
 
+// Reclassify a sonarr item if its type has changed (e.g. show -> anime)
+const reclassifySonarrItem = db.prepare(`
+  UPDATE media_items SET type=? WHERE sonarr_id=? AND type!=?
+`);
+
 const upsertMediaRadarr = db.prepare(`
   INSERT INTO media_items (type, title, year, tvdb_id, tmdb_id, imdb_id, sonarr_id, radarr_id, poster_path, overview, last_synced)
   VALUES (@type, @title, @year, @tvdb_id, @tmdb_id, @imdb_id, @sonarr_id, @radarr_id, @poster_path, @overview, CURRENT_TIMESTAMP)
@@ -48,10 +53,11 @@ async function syncSonarr() {
   const series = await fetchSonarr('/series');
   let count = 0;
   for (const s of series) {
-    const sonarrUrl = settings.get('sonarr_url') || '';
+    const type = s.seriesType === 'anime' ? 'anime' : 'show';
     const posterPath = s.images?.find(i => i.coverType === 'poster')?.remoteUrl || null;
+    reclassifySonarrItem.run(type, String(s.id), type);
     upsertMedia.run({
-      type: 'show',
+      type,
       title: s.title,
       year: s.year || null,
       tvdb_id: s.tvdbId ? String(s.tvdbId) : null,
