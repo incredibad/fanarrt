@@ -203,59 +203,56 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     <div className="scroll-area">
       {/* Hero */}
       <div className="item-hero">
-        <Link to={item.type === 'show' ? '/shows' : '/movies'} className="back-btn"
-          style={{ marginBottom: 14, display: 'inline-flex' }}>
-          <ArrowLeft size={13} />
-          {item.type === 'show' ? 'TV Shows' : 'Movies'}
-        </Link>
+        <div className="item-hero-poster">
+          {item.poster_path && !imgError ? (
+            <img src={item.poster_path} alt={item.title} onError={() => setImgError(true)} />
+          ) : (
+            <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center',
+              justifyContent:'center', background:'var(--bg-3)', color:'var(--text-3)' }}>
+              {item.type === 'show' ? <Tv size={28} /> : <Film size={28} />}
+            </div>
+          )}
+        </div>
 
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-          <div className="item-hero-poster">
-            {item.poster_path && !imgError ? (
-              <img src={item.poster_path} alt={item.title} onError={() => setImgError(true)} />
-            ) : (
-              <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center',
-                justifyContent:'center', background:'var(--bg-3)', color:'var(--text-3)' }}>
-                {item.type === 'show' ? <Tv size={28} /> : <Film size={28} />}
-              </div>
-            )}
+        <div className="item-hero-info">
+          <Link to={item.type === 'show' ? '/shows' : '/movies'} className="back-btn"
+            style={{ marginBottom: 8, display: 'inline-flex' }}>
+            <ArrowLeft size={12} />
+            {item.type === 'show' ? 'TV Shows' : 'Movies'}
+          </Link>
+
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <h1 className="item-hero-title">{item.title}</h1>
+            {item.year && <span className="item-hero-year" style={{ marginTop: 0 }}>{item.year}</span>}
+            <span className={`media-card-type-badge badge-${item.type}`} style={{ position: 'static', flexShrink: 0 }}>
+              {item.type === 'show' ? 'TV Show' : 'Movie'}
+            </span>
           </div>
 
-          <div className="item-hero-info">
-            <h1 className="item-hero-title">{item.title}</h1>
-            <div className="item-hero-year">{item.year || 'Unknown year'}</div>
-            {item.overview && <p className="item-hero-overview">{item.overview}</p>}
-
-            <div className="item-hero-tags">
-              <span className={`media-card-type-badge badge-${item.type}`} style={{ position: 'static' }}>
-                {item.type === 'show' ? 'TV Show' : 'Movie'}
-              </span>
-
-              {/* Clickable provider ID tags */}
-              {idLinks.map(link => (
-                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
-                  className={`tag tag-link ${link.source ? `tag-${link.source.replace('.', '-')}` : ''}`}
-                  title={`Open on ${link.label}`}>
-                  {link.display}
-                </a>
-              ))}
-
-              <span className="tag">{fanartData.total} artwork</span>
+          <div className="item-hero-tags">
+            {idLinks.map(link => (
+              <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                className={`tag tag-link ${link.source ? `tag-${link.source.replace('.', '-')}` : ''}`}
+                title={`Open on ${link.label}`}>
+                {link.display}
+              </a>
+            ))}
+            <span className="tag">{fanartData.total} artwork</span>
+            {favCount > 0 && (
               <span className="tag tag-fav">
                 <Star size={10} style={{ display:'inline', marginRight:3 }} />
                 {favCount} in collection
               </span>
-            </div>
+            )}
+          </div>
 
-            <div className="item-hero-actions">
-              <button className="btn btn-primary btn-sm" onClick={handleFetchFanart}
-                disabled={fetching || autoFetching}>
-                <RefreshCw size={13} style={{ animation: (fetching||autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
-                {fetching ? 'Fetching…' : autoFetching ? 'Auto-fetching…' : fanartData.total > 0 ? 'Refresh Fanart' : 'Fetch Fanart'}
-              </button>
-
-              {favCount > 0 && <DownloadMenu mediaItemId={item.id} />}
-            </div>
+          <div className="item-hero-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleFetchFanart}
+              disabled={fetching || autoFetching}>
+              <RefreshCw size={13} style={{ animation: (fetching||autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
+              {fetching ? 'Fetching…' : autoFetching ? 'Auto-fetching…' : fanartData.total > 0 ? 'Refresh Fanart' : 'Fetch Fanart'}
+            </button>
+            {favCount > 0 && <DownloadMenu mediaItemId={item.id} />}
           </div>
         </div>
       </div>
