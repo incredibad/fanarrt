@@ -202,8 +202,8 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   const backdropArt = fanartData.grouped?.background?.[0]
   const backdropSrc = backdropArt
     ? (backdropArt.source === 'fanart.tv'
-        ? `/api/proxy/thumb?url=${encodeURIComponent(backdropArt.url)}`
-        : (backdropArt.thumbnail_url || backdropArt.url))
+        ? `/api/proxy/poster?url=${encodeURIComponent(backdropArt.url)}`
+        : backdropArt.url)
     : null
 
   return (
