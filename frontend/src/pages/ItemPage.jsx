@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap } from 'lucide-react'
 import { api } from '../api'
 import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
@@ -52,6 +52,8 @@ const ART_TYPES = ['all', ...TYPE_ORDER]
 
 export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
   const { id } = useParams()
+  const location = useLocation()
+  const backTo = location.state?.from || null
   const [item, setItem] = useState(null)
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
   const [loading, setLoading] = useState(true)
@@ -226,10 +228,10 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         </div>
 
         <div className="item-hero-info">
-          <Link to={item.type === 'show' ? '/shows' : '/movies'} className="back-btn"
+          <Link to={backTo || (item.type === 'show' ? '/shows' : '/movies')} className="back-btn"
             style={{ marginBottom: 8, display: 'inline-flex' }}>
             <ArrowLeft size={12} />
-            {item.type === 'show' ? 'TV Shows' : 'Movies'}
+            {backTo === '/' ? 'All Media' : backTo === '/shows' ? 'TV Shows' : 'Movies'}
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>

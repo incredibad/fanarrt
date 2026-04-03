@@ -181,12 +181,14 @@ export default function LibraryPage({ typeFilter, activeCollectionId }) {
 
 function MediaCard({ item, dataLetter }) {
   const [imgError, setImgError] = useState(false)
+  const { pathname } = useLocation()
   const posterSrc = item.poster_path
     ? `/api/proxy/poster?url=${encodeURIComponent(item.poster_path)}`
     : null
   return (
     <Link
       to={`/item/${item.id}`}
+      state={{ from: pathname }}
       className="media-card"
       {...(dataLetter ? { 'data-letter': dataLetter } : {})}
     >
