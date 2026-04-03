@@ -750,6 +750,47 @@ body {
   flex-wrap: wrap;
 }
 
+.item-hero-banner-mobile {
+  display: none;
+}
+
+/* ── Collection header strip ─────────────────────────────────────────────── */
+
+.collection-header {
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-2);
+}
+
+.collection-header-strip {
+  display: flex;
+  gap: 2px;
+  height: 80px;
+  overflow: hidden;
+}
+
+.collection-header-thumb {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.collection-header-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.7) brightness(0.85);
+  display: block;
+}
+
+.collection-header-row {
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 /* Type filter bar (fanart types) */
 .type-filter-bar {
   padding: 16px 32px 8px;
@@ -1089,6 +1130,17 @@ body {
   .page-header, .filter-bar, .stats-row { padding-left: 16px; padding-right: 16px; }
   .fanart-grid { padding-left: 16px; padding-right: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .item-hero { flex-direction: column; }
+  .item-hero-banner-mobile {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+  }
+  .item-hero-poster-has-banner { display: none; }
+  .collection-header-strip { height: 60px; }
+  .collection-header-row { padding: 12px 16px; }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */

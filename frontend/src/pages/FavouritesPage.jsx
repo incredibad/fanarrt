@@ -172,61 +172,77 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   return (
     <div className="scroll-area" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
-      <div className="page-header" style={{ alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {renaming ? (
-              <input
-                ref={renameInputRef}
-                className="collection-rename-input"
-                value={renameValue}
-                onChange={e => setRenameValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleRenameSubmit()
-                  if (e.key === 'Escape') setRenaming(false)
-                }}
-                onBlur={handleRenameSubmit}
-              />
-            ) : (
-              <h1 className="page-title">{collectionLabel}</h1>
-            )}
-            <div className="dropdown" ref={menuRef}>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ padding: '5px 7px' }}
-                onClick={() => setMenuOpen(o => !o)}
-                title="Collection options"
-              >
-                <MoreVertical size={15} />
-              </button>
-              {menuOpen && (
-                <div className="dropdown-menu" style={{ minWidth: 150 }}>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => { setMenuOpen(false); setRenaming(true) }}
-                  >
-                    <Pencil size={13} />
-                    Rename
-                  </button>
-                  <div className="dropdown-sep" />
-                  <button
-                    className="dropdown-item"
-                    style={{ color: 'var(--red)' }}
-                    onClick={() => { setMenuOpen(false); setConfirmingDelete(true) }}
-                  >
-                    <Trash2 size={13} />
-                    Delete collection
-                  </button>
+      <div className="collection-header">
+        {allFavs.length > 0 && (
+          <div className="collection-header-strip">
+            {allFavs.slice(0, 10).map(fav => {
+              const src = fav.source === 'fanart.tv'
+                ? `/api/proxy/thumb?url=${encodeURIComponent(fav.url)}`
+                : (fav.thumbnail_url || fav.url)
+              return (
+                <div key={fav.id} className="collection-header-thumb">
+                  <img src={src} alt="" loading="lazy" />
                 </div>
-              )}
-            </div>
+              )
+            })}
           </div>
-          {totalCount > 0 && (
-            <span className="tag">{totalCount} items · {stats.length} titles</span>
-          )}
-        </div>
-        <div className="page-actions">
-          {totalCount > 0 && <DownloadMenu label="Download All" />}
+        )}
+        <div className="collection-header-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {renaming ? (
+                <input
+                  ref={renameInputRef}
+                  className="collection-rename-input"
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleRenameSubmit()
+                    if (e.key === 'Escape') setRenaming(false)
+                  }}
+                  onBlur={handleRenameSubmit}
+                />
+              ) : (
+                <h1 className="page-title">{collectionLabel}</h1>
+              )}
+              <div className="dropdown" ref={menuRef}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '5px 7px' }}
+                  onClick={() => setMenuOpen(o => !o)}
+                  title="Collection options"
+                >
+                  <MoreVertical size={15} />
+                </button>
+                {menuOpen && (
+                  <div className="dropdown-menu" style={{ minWidth: 150 }}>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => { setMenuOpen(false); setRenaming(true) }}
+                    >
+                      <Pencil size={13} />
+                      Rename
+                    </button>
+                    <div className="dropdown-sep" />
+                    <button
+                      className="dropdown-item"
+                      style={{ color: 'var(--red)' }}
+                      onClick={() => { setMenuOpen(false); setConfirmingDelete(true) }}
+                    >
+                      <Trash2 size={13} />
+                      Delete collection
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {totalCount > 0 && (
+              <span className="tag">{totalCount} items · {stats.length} titles</span>
+            )}
+          </div>
+          <div className="page-actions">
+            {totalCount > 0 && <DownloadMenu label="Download All" />}
+          </div>
         </div>
       </div>
 
