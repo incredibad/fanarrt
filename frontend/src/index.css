@@ -1123,9 +1123,11 @@ body {
   .fanart-grid { padding-left: 16px; padding-right: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .item-hero { flex-direction: row; align-items: center; padding: 16px; gap: 14px; }
   .item-hero-poster { width: 72px; height: 108px; }
-  .type-filter-bar { flex-direction: column; align-items: center; padding: 12px 16px; gap: 6px; }
-  .type-filter-tabs { flex: unset; justify-content: center; }
-  .type-provider-chips { margin-left: 0 !important; justify-content: center; }
+  .item-hero-actions { margin-top: 10px; }
+  .item-hero-actions .btn { width: 100%; justify-content: center; }
+  .type-filter-bar { flex-direction: column; align-items: stretch; padding: 0 16px; gap: 0; }
+  .type-filter-tabs { flex: unset; justify-content: center; padding: 10px 0; }
+  .type-provider-chips { margin-left: 0 !important; justify-content: center; padding: 10px 0; border-top: 1px solid var(--border-soft); }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
