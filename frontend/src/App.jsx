@@ -185,9 +185,9 @@ export default function App() {
       />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<LibraryPage />} />
-          <Route path="/shows" element={<LibraryPage typeFilter="show" />} />
-          <Route path="/movies" element={<LibraryPage typeFilter="movie" />} />
+          <Route path="/" element={<LibraryPage activeCollectionId={activeCollectionId} />} />
+          <Route path="/shows" element={<LibraryPage typeFilter="show" activeCollectionId={activeCollectionId} />} />
+          <Route path="/movies" element={<LibraryPage typeFilter="movie" activeCollectionId={activeCollectionId} />} />
           <Route path="/item/:id" element={
             <ItemPage
               onFavCountChange={handleFavCountChange}
