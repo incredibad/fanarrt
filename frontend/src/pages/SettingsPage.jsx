@@ -25,8 +25,9 @@ export default function SettingsPage({ onLogout }) {
     tmdb_api_key: '',
     fanart_api_key: '',
   })
-  const DEFAULT_ORDER = ['fanart.tv', 'tvdb', 'tmdb']
+  const DEFAULT_ORDER = ['fanart.tv', 'tvdb', 'tmdb', 'anilist']
   const [providerOrder, setProviderOrder] = useState(DEFAULT_ORDER)
+  const [anilistEnabled, setAnilistEnabled] = useState(true)
   const [sonarrInstances, setSonarrInstances] = useState([])
   const [radarrInstances, setRadarrInstances] = useState([])
   const [instanceStatus, setInstanceStatus] = useState({})
@@ -44,8 +45,11 @@ export default function SettingsPage({ onLogout }) {
           fanart_api_key: data.fanart_api_key || '',
         }))
         if (Array.isArray(data.provider_order) && data.provider_order.length) {
-          setProviderOrder(data.provider_order)
+          const order = data.provider_order
+          // Ensure 'anilist' is present for existing users with saved order
+          setProviderOrder(order.includes('anilist') ? order : [...order, 'anilist'])
         }
+        if (data.anilist_enabled !== undefined) setAnilistEnabled(data.anilist_enabled)
         if (Array.isArray(data.sonarr_instances)) setSonarrInstances(data.sonarr_instances)
         if (Array.isArray(data.radarr_instances)) setRadarrInstances(data.radarr_instances)
       })
@@ -56,7 +60,7 @@ export default function SettingsPage({ onLogout }) {
   const handleSaveProviders = async () => {
     setSaving(true)
     try {
-      await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder) })
+      await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder), anilist_enabled: anilistEnabled })
       toast('Settings saved', 'success')
     } catch (e) {
       toast(e.message, 'error')
@@ -238,6 +242,40 @@ export default function SettingsPage({ onLogout }) {
               </div>
               <div style={{ marginTop: 16, padding: '10px 12px', background: 'var(--bg-3)', borderRadius: 'var(--radius-sm)', fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
                 Clearlogos, clearart, disc art, character art and high-quality backgrounds for TV and movies.
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title">
+                <span style={{ fontSize: 16 }}>🎌</span> AniList
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>
+                    Fetch anime artwork from AniList
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
+                    No API key required. Only used for anime when a confirmed MAL ID is found via TVDB — never guesses by title.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={anilistEnabled}
+                  onClick={() => setAnilistEnabled(v => !v)}
+                  style={{
+                    flexShrink: 0, width: 40, height: 22, borderRadius: 11,
+                    background: anilistEnabled ? 'var(--accent)' : 'var(--bg-4)',
+                    border: '1px solid ' + (anilistEnabled ? 'var(--accent)' : 'var(--border)'),
+                    cursor: 'pointer', position: 'relative', transition: 'background 0.2s, border-color 0.2s',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 2, left: anilistEnabled ? 20 : 2,
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    transition: 'left 0.2s', display: 'block',
+                  }} />
+                </button>
               </div>
             </div>
 
