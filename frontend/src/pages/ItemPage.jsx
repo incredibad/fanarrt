@@ -199,11 +199,21 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
   const idLinks = providerLinks(item)
 
+  const mobileBannerArt = fanartData.grouped?.background?.[0] || fanartData.grouped?.banner?.[0]
+  const mobileBannerSrc = mobileBannerArt
+    ? (mobileBannerArt.source === 'fanart.tv'
+        ? `/api/proxy/thumb?url=${encodeURIComponent(mobileBannerArt.url)}`
+        : (mobileBannerArt.thumbnail_url || mobileBannerArt.url))
+    : null
+
   return (
     <div className="scroll-area">
       {/* Hero */}
       <div className="item-hero">
-        <div className="item-hero-poster">
+        {mobileBannerSrc && (
+          <img className="item-hero-banner-mobile" src={mobileBannerSrc} alt={item.title} />
+        )}
+        <div className={`item-hero-poster ${mobileBannerSrc ? 'item-hero-poster-has-banner' : ''}`}>
           {item.poster_path && !imgError ? (
             <img src={item.poster_path} alt={item.title} onError={() => setImgError(true)} />
           ) : (
