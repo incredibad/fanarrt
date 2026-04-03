@@ -150,9 +150,9 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     try {
       if (currentFavId) {
         await api.removeFavourite(currentFavId)
+        onFavCountChange?.(-1, collectionId)
         if (collectionId === activeCollectionId) {
           setFavCount(c => Math.max(0, c - 1))
-          onFavCountChange?.(-1)
           setFanartData(prev => ({
             ...prev,
             fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: null } : f),
@@ -161,9 +161,9 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         return null
       } else {
         const result = await api.addFavourite(art.id, item?.id, collectionId)
+        onFavCountChange?.(+1, collectionId)
         if (collectionId === activeCollectionId) {
           setFavCount(c => c + 1)
-          onFavCountChange?.(+1)
           setFanartData(prev => ({
             ...prev,
             fanart: prev.fanart.map(f => f.id === art.id ? { ...f, favourite_id: result?.id || 'temp' } : f),
