@@ -147,32 +147,26 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, onC
     <div className="scroll-area" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {renaming ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <input
-                  ref={renameInputRef}
-                  className="collection-rename-input"
-                  value={renameValue}
-                  onChange={e => setRenameValue(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleRenameSubmit()
-                    if (e.key === 'Escape') setRenaming(false)
-                  }}
-                  onBlur={handleRenameSubmit}
-                />
-              </div>
+              <input
+                ref={renameInputRef}
+                className="collection-rename-input"
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleRenameSubmit()
+                  if (e.key === 'Escape') setRenaming(false)
+                }}
+                onBlur={handleRenameSubmit}
+              />
             ) : (
               <h1 className="page-title">{collectionLabel}</h1>
             )}
-            <p className="page-subtitle">
-              {totalCount} saved artwork items across {stats.length} titles
-            </p>
-          </div>
 
-          {/* ⋮ context menu */}
-          <div className="dropdown" ref={menuRef} style={{ marginTop: 6 }}>
+            {/* ⋮ context menu */}
+            <div className="dropdown" ref={menuRef}>
             <button
               className="btn btn-ghost btn-sm"
               style={{ padding: '5px 7px' }}
@@ -202,6 +196,10 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, onC
               </div>
             )}
           </div>
+          </div>
+          <p className="page-subtitle">
+            {totalCount} saved artwork items across {stats.length} titles
+          </p>
         </div>
 
         <div className="page-actions">
