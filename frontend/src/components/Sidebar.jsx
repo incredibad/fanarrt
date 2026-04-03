@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation, useMatch } from 'react-router-dom'
 import { Film, Tv, Settings, RefreshCw, LayoutGrid, PanelLeftOpen, PanelLeftClose,
          FolderOpen, Plus, Check, X } from 'lucide-react'
 
@@ -10,6 +10,9 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
   const [inlineName, setInlineName] = useState('')
   const inlineNameRef = useRef(null)
   const navigate = useNavigate()
+  const location = useLocation()
+  const onItemPage = useMatch('/item/:id')
+  const activeFrom = onItemPage ? (location.state?.from || null) : null
 
   useEffect(() => {
     const close = () => setMobileOpen(false)
@@ -27,7 +30,7 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      className={({ isActive }) => `nav-item ${(isActive || activeFrom === to) ? 'active' : ''}`}
       onClick={() => setMobileOpen(false)}
     >
       {icon}
