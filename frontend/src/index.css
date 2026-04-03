@@ -656,18 +656,20 @@ body {
 .fanart-fav-indicator {
   position: absolute;
   top: 8px;
-  left: 8px;
-  width: 22px;
-  height: 22px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
   background: var(--accent);
-  border-radius: 50%;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   box-shadow: 0 2px 8px rgba(99,102,241,0.5);
   pointer-events: none;
+  transition: opacity var(--transition);
 }
+.fanart-item:hover .fanart-fav-indicator { opacity: 0; }
 
 /* Item detail page */
 .item-hero {
@@ -1378,16 +1380,16 @@ body {
 }
 
 .fav-split-star {
-  border-radius: 6px 0 0 6px !important;
-  width: 26px;
+  border-radius: 0 6px 6px 0 !important;
+  width: 30px;
 }
 
 .fav-chevron {
-  width: 18px;
+  width: 26px;
   height: 30px;
-  border-radius: 0 6px 6px 0;
+  border-radius: 6px 0 0 6px;
   border: none;
-  border-left: 1px solid rgba(255,255,255,0.18);
+  border-right: 1px solid rgba(255,255,255,0.18);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1491,7 +1493,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 199;
+  z-index: 1000;
 }
 
 @media (max-width: 640px) {
@@ -1506,7 +1508,7 @@ body {
     max-height: 55vh;
     overflow-y: auto;
     animation: slideUp 0.2s ease;
-    z-index: 200;
+    z-index: 1001;
   }
   .collection-picker-backdrop { display: block; }
 }
