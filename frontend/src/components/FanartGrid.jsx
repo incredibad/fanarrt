@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
 import { Star } from 'lucide-react'
-import MultiStarIcon from './MultiStarIcon'
 import Lightbox from './Lightbox'
 
 export const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
@@ -34,9 +33,6 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   )
   // isFav: in the active collection
   const [isFav, setIsFav] = useState(!!art.favourite_id)
-  // otherCount: how many other collections this art is in (independent of active)
-  const [otherCount, setOtherCount] = useState(art.other_collection_count || 0)
-
   const prevFavRef = useRef(!!art.favourite_id)
   if (!!art.favourite_id !== prevFavRef.current) {
     prevFavRef.current = !!art.favourite_id
@@ -47,8 +43,6 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   const isWide = art.type === 'background'
   const isSquare = ['clearlogo', 'clearart', 'disc', 'icon', 'characterart'].includes(art.type)
   const aspectRatio = isBanner ? '16/3' : isWide ? '16/9' : isSquare ? '1/1' : '2/3'
-
-  const isMulti = isFav && otherCount > 0
 
   const longPressTimer = useRef(null)
   const didLongPress = useRef(false)
@@ -89,9 +83,7 @@ function FanartItem({ art, onToggleFav, onOpen }) {
   const dims = liveDims || (art.width && art.height ? { w: art.width, h: art.height } : null)
   const res = dims ? resLabel(dims.w, dims.h, art.type) : null
 
-  const favTitle = isFav
-    ? (isMulti ? 'Remove from active collection (also in others)' : 'Remove from collection')
-    : 'Add to collection'
+  const favTitle = isFav ? 'Remove from collection' : 'Add to collection'
 
   return (
     <div
@@ -128,9 +120,7 @@ function FanartItem({ art, onToggleFav, onOpen }) {
 
       {isFav && (
         <div className="fanart-fav-indicator">
-          {isMulti
-            ? <MultiStarIcon size={11} fill="#fff" />
-            : <Star size={11} fill="#fff" />}
+          <Star size={11} fill="#fff" />
         </div>
       )}
 
@@ -140,9 +130,7 @@ function FanartItem({ art, onToggleFav, onOpen }) {
           onClick={handleFavClick}
           title={favTitle}
         >
-          {isMulti
-            ? <MultiStarIcon size={13} fill="#fff" />
-            : <Star size={13} fill={isFav ? '#fff' : 'none'} />}
+          <Star size={13} fill={isFav ? '#fff' : 'none'} />
         </button>
       </div>
     </div>
@@ -161,12 +149,10 @@ function groupBySource(arts) {
 export default function FanartGrid({ grouped, onToggleFav, activeType }) {
   const [lightboxImg, setLightboxImg] = useState(null)
   const [lightboxFav, setLightboxFav] = useState(false)
-  const [lightboxOtherCount, setLightboxOtherCount] = useState(0)
 
   const handleOpen = useCallback((art) => {
     setLightboxImg(art)
     setLightboxFav(!!art.favourite_id)
-    setLightboxOtherCount(art.other_collection_count || 0)
   }, [])
 
   const handleLightboxFav = useCallback(() => {
@@ -240,7 +226,6 @@ export default function FanartGrid({ grouped, onToggleFav, activeType }) {
         <Lightbox
           image={lightboxImg}
           isFavourite={lightboxFav}
-          isMultiCollection={lightboxFav && lightboxOtherCount > 0}
           onClose={() => setLightboxImg(null)}
           onToggleFav={handleLightboxFav}
         />
