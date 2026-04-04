@@ -211,8 +211,10 @@ async function getMalIdForTvdb(tvdbId) {
     animeListFetchedAt = Date.now();
   }
   const el = animeListXml.match(new RegExp(`<anime\\s[^>]*tvdbid="${tvdbId}"[^>]*>`, 'i'));
+  console.log(`[anime-lists] tvdbid=${tvdbId} el=${el ? el[0].slice(0,120) : 'NOT FOUND'}`);
   if (!el) return null;
   const mal = el[0].match(/\bmalid="(\d+)"/i);
+  console.log(`[anime-lists] malid match=${JSON.stringify(mal)}`);
   return mal ? mal[1] : null;
 }
 
