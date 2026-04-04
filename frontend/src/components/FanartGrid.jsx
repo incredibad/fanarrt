@@ -254,7 +254,7 @@ function groupBySource(arts) {
   return map
 }
 
-export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, activeType, collections, activeCollectionId }) {
+export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, activeType, collections, activeCollectionId, itemTitle }) {
   const [lightboxImg, setLightboxImg] = useState(null)
   const [lightboxFav, setLightboxFav] = useState(false)
 
@@ -351,6 +351,7 @@ export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, a
           collections={collections}
           activeCollectionId={activeCollectionId}
           onToggleCollection={handleLightboxToggleCollection}
+          itemTitle={itemTitle}
         />
       )}
     </>

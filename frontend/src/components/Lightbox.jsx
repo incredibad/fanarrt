@@ -26,15 +26,26 @@ function resLabel(width, height, type) {
   return null
 }
 
-function getFilename(image) {
-  try {
-    const url = new URL(image.url)
-    const parts = url.pathname.split('/')
-    const last = parts[parts.length - 1]
-    if (last && last.includes('.')) return last
-  } catch {}
+let dlCounter = 0
+
+function normLang(code) {
+  if (!code || code === '' || code === '00') return null
+  try { return new Intl.Locale(code).language.toUpperCase() } catch { return code.slice(0, 2).toUpperCase() }
+}
+
+function getFilename(image, itemTitle) {
   const ext = image.url.split('?')[0].split('.').pop().toLowerCase() || 'jpg'
-  return `${image.type}_${image.source}.${ext}`
+  const title = (itemTitle || '')
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .slice(0, 16) || 'unknown'
+  const provider = image.source.replace('.', '').replace(/[^a-zA-Z0-9]/g, '')
+  const res = (image.width && image.height) ? `${image.width}x${image.height}` : null
+  const lang = normLang(image.language)
+  const counter = String(++dlCounter).padStart(3, '0')
+  const parts = [title, image.type, provider, res, lang, counter].filter(Boolean)
+  return `${parts.join('_')}.${ext}`
 }
 
 async function downloadImage(url, filename) {
@@ -56,7 +67,7 @@ async function downloadImage(url, filename) {
   }
 }
 
-export default function Lightbox({ image, isFavourite, onClose, onToggleFav, collections, activeCollectionId, onToggleCollection }) {
+export default function Lightbox({ image, isFavourite, onClose, onToggleFav, collections, activeCollectionId, onToggleCollection, itemTitle }) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [membership, setMembership] = useState(null)
   const [membershipLoading, setMembershipLoading] = useState(false)
@@ -110,7 +121,7 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav, col
 
   const providerLabel = PROVIDER_LABELS[image.source] || image.source.toUpperCase()
   const res = resLabel(image.width, image.height, image.type)
-  const filename = getFilename(image)
+  const filename = getFilename(image, itemTitle)
 
   return (
     <div className="lightbox" onClick={pickerOpen ? () => setPickerOpen(false) : onClose}>

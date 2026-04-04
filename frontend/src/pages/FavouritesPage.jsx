@@ -400,6 +400,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
           onToggleCollection={(art, collectionId, currentFavId) =>
             handleToggleCollection(lightbox, collectionId, currentFavId)
           }
+          itemTitle={lightbox.media_title}
         />
       )}
 
