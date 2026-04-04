@@ -51,9 +51,9 @@ function providerLinks(item) {
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
 const RES_TIERS = [
-  { id: 'hd',  label: 'HD+',  min: 1280 },
-  { id: 'fhd', label: 'FHD+', min: 1920 },
-  { id: '4k',  label: '4K',   min: 3840 },
+  { id: 'hd',  label: 'HD',  min: 1280, max: 1920 },
+  { id: 'fhd', label: 'FHD', min: 1920, max: 3840 },
+  { id: '4k',  label: '4K',  min: 3840, max: Infinity },
 ]
 
 export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
@@ -201,7 +201,10 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     t === 'all' || fanartData.grouped[t]?.length > 0
   )
   const availableResTiers = RES_TIERS.filter(t =>
-    (fanartData.fanart || []).some(f => Math.max(f.width || 0, f.height || 0) >= t.min)
+    (fanartData.fanart || []).some(f => {
+      const long = Math.max(f.width || 0, f.height || 0)
+      return long >= t.min && long < t.max
+    })
   )
 
   // Apply source + resolution filter to grouped data
@@ -213,8 +216,11 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   for (const [type, arts] of Object.entries(baseGrouped)) {
     let filtered = activeSource === 'all' ? arts : arts.filter(a => a.source === activeSource)
     if (resFilter !== 'all') {
-      const minPx = RES_TIERS.find(t => t.id === resFilter).min
-      filtered = filtered.filter(a => Math.max(a.width || 0, a.height || 0) >= minPx)
+      const tier = RES_TIERS.find(t => t.id === resFilter)
+      filtered = filtered.filter(a => {
+        const long = Math.max(a.width || 0, a.height || 0)
+        return long >= tier.min && long < tier.max
+      })
     }
     if (filtered.length > 0) filteredGrouped[type] = filtered
   }

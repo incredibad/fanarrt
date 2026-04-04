@@ -10,9 +10,9 @@ import { CollectionPicker } from '../components/FanartGrid'
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
 const RES_TIERS = [
-  { id: 'hd',  label: 'HD+',  min: 1280 },
-  { id: 'fhd', label: 'FHD+', min: 1920 },
-  { id: '4k',  label: '4K',   min: 3840 },
+  { id: 'hd',  label: 'HD',  min: 1280, max: 1920 },
+  { id: 'fhd', label: 'FHD', min: 1920, max: 3840 },
+  { id: '4k',  label: '4K',  min: 3840, max: Infinity },
 ]
 
 export default function FavouritesPage({ onFavCountChange, activeCollection, activeCollectionId, collections = [], onCollectionRename, onCollectionDelete }) {
@@ -91,15 +91,18 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       if (search && !f.media_title.toLowerCase().includes(search.toLowerCase())) return false
       if (resFilter !== 'all') {
         const long = Math.max(f.width || 0, f.height || 0)
-        const min = RES_TIERS.find(t => t.id === resFilter).min
-        if (long < min) return false
+        const tier = RES_TIERS.find(t => t.id === resFilter)
+        if (long < tier.min || long >= tier.max) return false
       }
       return true
     })
   }, [allFavs, selectedId, typeFilter, search, resFilter])
 
   const favResTiers = useMemo(() =>
-    RES_TIERS.filter(t => allFavs.some(f => Math.max(f.width || 0, f.height || 0) >= t.min))
+    RES_TIERS.filter(t => allFavs.some(f => {
+      const long = Math.max(f.width || 0, f.height || 0)
+      return long >= t.min && long < t.max
+    }))
   , [allFavs])
 
   const handleRemove = async (fav) => {
