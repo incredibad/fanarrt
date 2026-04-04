@@ -23,6 +23,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
 
   const [allFavs, setAllFavs] = useState([])
   const [stats, setStats] = useState([])
+  const [settings, setSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const [lightbox, setLightbox] = useState(null)
   const [downloadingView, setDownloadingView] = useState(false)
@@ -70,10 +71,12 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     Promise.all([
       api.getFavouriteStats(activeCollectionId),
       api.getFavourites({ collection_id: activeCollectionId }),
+      api.getSettings(),
     ])
-      .then(([s, favs]) => {
+      .then(([s, favs, loadedSettings]) => {
         setStats(s)
         setAllFavs(favs)
+        setSettings(loadedSettings)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -109,13 +112,16 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     ['all', ...TYPE_ORDER.filter(t => displayedFavs.some(f => f.type === t))]
   , [displayedFavs])
 
-  const availableSources = useMemo(() =>
-    [...new Set(displayedFavs.map(f => f.source))]
-  , [displayedFavs])
-
-  const availableResTiers = useMemo(() =>
-    RES_TIERS.filter(t => displayedFavs.some(f => tierMatch(f.width, f.height, t)))
-  , [displayedFavs])
+  const enabledSources = useMemo(() => {
+    const all = ['fanart.tv', 'tvdb', 'tmdb', 'anilist']
+    return all.filter(src => {
+      if (src === 'tvdb')      return !!settings.tvdb_api_key
+      if (src === 'tmdb')      return !!settings.tmdb_api_key
+      if (src === 'fanart.tv') return !!settings.fanart_api_key
+      if (src === 'anilist')   return !!settings.anilist_enabled
+      return true
+    })
+  }, [settings])
 
   const gridFavs = useMemo(() => {
     return displayedFavs.filter(f => {
@@ -381,14 +387,14 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                     </div>
 
                     <div className="type-right-chips">
-                      {availableSources.length > 1 && (
+                      {enabledSources.length > 1 && (
                         <div className="type-provider-chips">
                           <button
                             className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
                             onClick={() => setArtSourceFilter('all')}
                             style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
                           >All</button>
-                          {availableSources.map(src => (
+                          {enabledSources.map(src => (
                             <button key={src}
                               className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
                               onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
@@ -401,29 +407,26 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                         </div>
                       )}
 
-                      {availableSources.length > 1 && availableResTiers.length > 0 && (
+                      {enabledSources.length > 1 && (
                         <div className="filter-chip-divider" />
                       )}
 
-                      {availableResTiers.length > 0 && (
-                        <div className="type-res-chips">
-                          <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                            onClick={() => setResFilter('all')}>All</button>
-                          {availableResTiers.map(tier => (
-                            <button key={tier.id}
-                              className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                              onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                              title={`${tier.w}×${tier.h} only`}
-                            >{tier.label}</button>
-                          ))}
-                        </div>
-                      )}
+                      {/* Resolution filter chips — always shown (static tiers) */}
+                      <div className="type-res-chips">
+                        <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                          onClick={() => setResFilter('all')}>All</button>
+                        {RES_TIERS.map(tier => (
+                          <button key={tier.id}
+                            className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                            onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                            title={`${tier.w}×${tier.h} only`}
+                          >{tier.label}</button>
+                        ))}
+                      </div>
 
                       {displayedFavs.length > 0 && (
                         <>
-                          {(availableSources.length > 1 || availableResTiers.length > 0) && (
-                            <div className="filter-chip-divider" />
-                          )}
+                          <div className="filter-chip-divider" />
                           <button
                             className="btn btn-secondary btn-sm"
                             style={{ flexShrink: 0 }}
