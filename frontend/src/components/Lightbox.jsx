@@ -203,7 +203,7 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav, col
           ? <span className="fanart-meta-chip">{image.width}×{image.height}px</span>
           : null
         }
-        {image.language && image.language !== 'en' && image.language !== '' && (
+        {image.language && image.language !== 'en' && image.language !== '' && image.language !== '00' && (
           <span className="fanart-meta-chip">{langLabel(image.language)}</span>
         )}
       </div>
