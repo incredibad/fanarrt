@@ -221,9 +221,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               )}
             </div>
           </div>
-          {totalCount > 0 && (
-            <span className="tag">{totalCount} items · {stats.length} titles</span>
-          )}
         </div>
         <div className="page-actions">
           {totalCount > 0 && <DownloadMenu label="Download All" />}
