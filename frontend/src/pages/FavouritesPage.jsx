@@ -4,8 +4,7 @@ import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, 
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import Lightbox from '../components/Lightbox'
-import { CollectionPicker } from '../components/FanartGrid'
-import { TYPE_ORDER } from '../components/FanartGrid'
+import { CollectionPicker, TYPE_ORDER } from '../components/FanartGrid'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
@@ -495,7 +494,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   )
 }
 
-const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', 'disc', 'characterart', 'icon', 'other']
 
 function resLabel(w, h, type) {
   if (!w || !h) return null
