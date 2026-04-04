@@ -764,10 +764,7 @@ body {
 
 /* Type filter bar (fanart types) */
 .type-filter-bar {
-  padding: 12px 32px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding: 12px 32px 10px;
   border-bottom: 1px solid var(--border-soft);
   margin-bottom: 20px;
 }
@@ -786,11 +783,25 @@ body {
   flex: 1;
 }
 
+/* Right-side chip cluster: provider + divider + resolution */
+.type-right-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .type-provider-chips {
   display: flex;
   gap: 4px;
   align-items: center;
-  margin-left: auto;
+}
+
+.filter-chip-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
   flex-shrink: 0;
 }
 
@@ -798,7 +809,6 @@ body {
   display: flex;
   gap: 4px;
   align-items: center;
-  padding-bottom: 2px;
 }
 
 .res-chip {
@@ -1201,10 +1211,12 @@ body {
   .item-hero-actions { margin-top: 10px; }
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
-  .type-filter-bar { padding: 0 16px; gap: 0; }
+  .type-filter-bar { padding: 0 16px; }
   .type-filter-row { flex-direction: column; align-items: stretch; }
   .type-filter-tabs { flex: unset; justify-content: center; padding: 10px 0; }
-  .type-provider-chips { margin-left: 0 !important; justify-content: center; padding: 10px 0; border-top: 1px solid var(--border-soft); }
+  .type-right-chips { flex-direction: column; align-items: stretch; margin-left: 0; gap: 0; }
+  .filter-chip-divider { display: none; }
+  .type-provider-chips { justify-content: center; padding: 10px 0; border-top: 1px solid var(--border-soft); }
   .type-res-chips { justify-content: center; padding: 8px 0; border-top: 1px solid var(--border-soft); }
 }
 
