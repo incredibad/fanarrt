@@ -8,7 +8,31 @@ const DOWNLOADS_DIR = process.env.DOWNLOADS_DIR || path.join(__dirname, '../../d
 if (!fs.existsSync(DOWNLOADS_DIR)) fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 
 function sanitize(name) {
-  return name.replace(/[^a-z0-9_\-. ]/gi, '_').replace(/\s+/g, '_').substring(0, 80);
+  return (name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_') || 'unknown';
+}
+
+function normLang(code) {
+  if (!code || code === '' || code === '00') return null;
+  try {
+    const tag = new Intl.Locale(code).language;
+    return tag ? tag.toLowerCase() : null;
+  } catch {
+    return code.slice(0, 2).toLowerCase();
+  }
+}
+
+function buildFilename(row, itemTitle, counter) {
+  const title = sanitize(itemTitle || row.media_title || '');
+  const provider = (row.source || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  const res = (row.width && row.height) ? `${row.width}x${row.height}` : null;
+  const lang = normLang(row.language);
+  const n = String(counter).padStart(3, '0');
+  const segments = [row.type, provider, res, lang, n].filter(Boolean);
+  return `${title}-${segments.join('-')}`;
 }
 
 async function streamImageToArchive(archive, url, filePath) {
@@ -35,18 +59,16 @@ async function downloadItemFavourites(mediaItemId, res) {
     WHERE fav.media_item_id = ?
   `).all(mediaItemId);
 
-  const zipName = `${sanitize(item.title)}_fanart.zip`;
+  const zipName = `${sanitize(item.title)}.zip`;
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
 
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
 
-  const counts = {};
+  let counter = 0;
   for (const fav of favs) {
-    counts[fav.type] = (counts[fav.type] || 0) + 1;
-    const n = String(counts[fav.type]).padStart(3, '0');
-    const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
+    const filePath = buildFilename(fav, item.title, ++counter);
     await streamImageToArchive(archive, fav.url, filePath);
   }
 
@@ -62,7 +84,7 @@ async function downloadAllFavourites(res) {
   `).all();
 
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="fanart_library.zip"');
+  res.setHeader('Content-Disposition', 'attachment; filename="favourites-download.zip"');
 
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
@@ -74,11 +96,9 @@ async function downloadAllFavourites(res) {
       WHERE fav.media_item_id = ?
     `).all(item.id);
 
-    const counts = {};
+    let counter = 0;
     for (const fav of favs) {
-      counts[fav.type] = (counts[fav.type] || 0) + 1;
-      const n = String(counts[fav.type]).padStart(3, '0');
-      const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
+      const filePath = buildFilename(fav, item.title, ++counter);
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -95,9 +115,8 @@ async function downloadTypeFavourites(type, res) {
     ORDER BY mi.title
   `).all(type);
 
-  const zipName = type === 'show' ? 'tv_shows_fanart.zip' : 'movies_fanart.zip';
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
+  res.setHeader('Content-Disposition', 'attachment; filename="favourites-download.zip"');
 
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
@@ -109,11 +128,9 @@ async function downloadTypeFavourites(type, res) {
       WHERE fav.media_item_id = ?
     `).all(item.id);
 
-    const counts = {};
+    let counter = 0;
     for (const fav of favs) {
-      counts[fav.type] = (counts[fav.type] || 0) + 1;
-      const n = String(counts[fav.type]).padStart(3, '0');
-      const filePath = `${sanitize(item.title)}_${fav.type}_${n}`;
+      const filePath = buildFilename(fav, item.title, ++counter);
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -123,26 +140,27 @@ async function downloadTypeFavourites(type, res) {
 
 // Stream a zip of specific fanart IDs (current-view download from Favourites page)
 async function downloadFanartIds(fanartIds, label, res) {
-  const zipName = `${sanitize(label || 'favourites')}.zip`;
+  const rows = fanartIds.map(id => db.prepare(`
+    SELECT f.*, mi.title as media_title, mi.type as media_type
+    FROM fanart f
+    JOIN media_items mi ON mi.id = f.media_item_id
+    WHERE f.id = ?
+  `).get(id)).filter(Boolean);
+
+  const uniqueTitles = [...new Set(rows.map(r => r.media_title))];
+  const zipName = uniqueTitles.length === 1
+    ? `${sanitize(uniqueTitles[0])}.zip`
+    : 'favourites-download.zip';
+
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
 
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
 
-  const counts = {};
-  for (const fanartId of fanartIds) {
-    const row = db.prepare(`
-      SELECT f.*, mi.title as media_title, mi.type as media_type
-      FROM fanart f
-      JOIN media_items mi ON mi.id = f.media_item_id
-      WHERE f.id = ?
-    `).get(fanartId);
-    if (!row) continue;
-    const key = `${sanitize(row.media_title)}/${row.type}`;
-    counts[key] = (counts[key] || 0) + 1;
-    const n = String(counts[key]).padStart(3, '0');
-    const filePath = `${sanitize(row.media_title)}_${row.type}_${n}`;
+  let counter = 0;
+  for (const row of rows) {
+    const filePath = buildFilename(row, row.media_title, ++counter);
     await streamImageToArchive(archive, row.url, filePath);
   }
 

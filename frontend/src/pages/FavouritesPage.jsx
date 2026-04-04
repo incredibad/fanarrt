@@ -175,7 +175,9 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = href
-      a.download = `${label.replace(/\s+/g, '_')}_collection.zip`
+      a.download = selectedItem
+        ? `${selectedItem.title.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim().replace(/\s+/g, '_')}.zip`
+        : 'favourites-download.zip'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
