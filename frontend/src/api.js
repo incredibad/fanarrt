@@ -83,5 +83,6 @@ export const api = {
     shows: '/api/favourites/download/shows',
     movies: '/api/favourites/download/movies',
     item: (id) => `/api/favourites/download/${id}`,
+    itemAll: (id) => `/api/library/${id}/download`,
   },
 }

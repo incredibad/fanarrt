@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db/database');
 const { syncSonarr, syncRadarr } = require('../services/arrSync');
 const { fetchFanartForItem } = require('../services/fanartFetch');
+const { downloadItemAll } = require('../services/download');
 
 // GET /api/library - list all media items
 router.get('/', (req, res) => {
@@ -150,6 +151,15 @@ router.post('/:id/fetch-fanart', async (req, res) => {
   const count = await fetchFanartForItem(item);
   db.prepare('UPDATE media_items SET fanart_fetched_at=CURRENT_TIMESTAMP WHERE id=?').run(item.id);
   res.json({ fetched: count });
+});
+
+// GET /api/library/:id/download - download all fanart for a media item as a zip
+router.get('/:id/download', async (req, res) => {
+  try {
+    await downloadItemAll(req.params.id, res);
+  } catch (e) {
+    if (!res.headersSent) res.status(500).json({ error: e.message });
+  }
 });
 
 // GET /api/library/:id/needs-refresh - returns whether auto-fetch should run (48h window)

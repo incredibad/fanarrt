@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link, useLocation } from 'react-router-dom'
-import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap, AlertTriangle, Download } from 'lucide-react'
 import { api } from '../api'
 import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
 import DownloadMenu from '../components/DownloadMenu'
@@ -309,6 +309,12 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
               <RefreshCw size={13} style={{ animation: (fetching||autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
               {fetching ? 'Fetching…' : autoFetching ? 'Auto-fetching…' : fanartData.total > 0 ? 'Refresh Fanart' : 'Fetch Fanart'}
             </button>
+            {fanartData.total > 0 && (
+              <a className="btn btn-secondary btn-sm" href={api.downloadUrl.itemAll(item.id)} download>
+                <Download size={13} />
+                Download All
+              </a>
+            )}
             {favCount > 0 && <DownloadMenu mediaItemId={item.id} />}
           </div>
         </div>
