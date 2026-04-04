@@ -38,12 +38,13 @@ function getFilename(image, itemTitle) {
   const title = (itemTitle || '')
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim()
+    .toLowerCase()
     .replace(/\s+/g, '_') || 'unknown'
-  const provider = image.source.replace(/[^a-zA-Z0-9]/g, '')
+  const provider = image.source.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
   const res = (image.width && image.height) ? `${image.width}x${image.height}` : null
   const lang = normLang(image.language)
   const counter = String(++dlCounter).padStart(3, '0')
-  const segments = [image.type, provider, res, lang, counter].filter(Boolean)
+  const segments = [image.type, provider, res, lang?.toLowerCase(), counter].filter(Boolean)
   return `${title}-${segments.join('-')}.${ext}`
 }
 
