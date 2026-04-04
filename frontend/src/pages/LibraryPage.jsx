@@ -103,7 +103,8 @@ export default function LibraryPage({ typeFilter, activeCollectionId }) {
   })
 
   const pageTitle = typeFilter === 'show' ? 'TV Shows'
-    : typeFilter === 'movie' ? 'Movies' : 'All Media'
+    : typeFilter === 'movie' ? 'Movies'
+    : typeFilter === 'anime' ? 'Anime' : 'All Media'
 
   const letters = useMemo(() =>
     [...new Set(items.map(i => firstLetter(i.title)))].sort()
