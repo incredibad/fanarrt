@@ -90,7 +90,14 @@ const TABS = [
   { id: 'servers',   label: 'Media Servers', icon: Server },
   { id: 'providers', label: 'Providers',     icon: Database },
   { id: 'account',   label: 'Account',       icon: User },
+  { id: 'system',    label: 'System',        icon: AlertTriangle },
 ]
+
+const TYPE_PROVIDER_DEFAULTS = {
+  show:  ['fanart.tv', 'tvdb', 'tmdb'],
+  movie: ['fanart.tv', 'tmdb'],
+  anime: ['fanart.tv', 'tvdb', 'tmdb', 'anilist'],
+}
 
 const TYPE_MODE_LABELS = { auto: 'Auto', show: 'Shows Only', anime: 'Anime Only' }
 
@@ -101,8 +108,7 @@ export default function SettingsPage({ onLogout }) {
     tmdb_api_key: '',
     fanart_api_key: '',
   })
-  const DEFAULT_ORDER = ['fanart.tv', 'tvdb', 'tmdb', 'anilist']
-  const [providerOrder, setProviderOrder] = useState(DEFAULT_ORDER)
+  const [providerOrders, setProviderOrders] = useState(TYPE_PROVIDER_DEFAULTS)
   const [anilistEnabled, setAnilistEnabled] = useState(true)
   const [anilistFuzzySearch, setAnilistFuzzySearch] = useState(false)
   const [sonarrInstances, setSonarrInstances] = useState([])
@@ -124,11 +130,11 @@ export default function SettingsPage({ onLogout }) {
           tmdb_api_key: data.tmdb_api_key || '',
           fanart_api_key: data.fanart_api_key || '',
         }))
-        if (Array.isArray(data.provider_order) && data.provider_order.length) {
-          const order = data.provider_order
-          // Ensure 'anilist' is present for existing users with saved order
-          setProviderOrder(order.includes('anilist') ? order : [...order, 'anilist'])
-        }
+        setProviderOrders({
+          show:  (Array.isArray(data.provider_order_show)  && data.provider_order_show.length)  ? data.provider_order_show  : TYPE_PROVIDER_DEFAULTS.show,
+          movie: (Array.isArray(data.provider_order_movie) && data.provider_order_movie.length) ? data.provider_order_movie : TYPE_PROVIDER_DEFAULTS.movie,
+          anime: (Array.isArray(data.provider_order_anime) && data.provider_order_anime.length) ? data.provider_order_anime : TYPE_PROVIDER_DEFAULTS.anime,
+        })
         if (data.anilist_enabled !== undefined) setAnilistEnabled(data.anilist_enabled)
         if (data.anilist_fuzzy_search !== undefined) setAnilistFuzzySearch(data.anilist_fuzzy_search)
         if (Array.isArray(data.sonarr_instances)) setSonarrInstances(data.sonarr_instances)
@@ -151,14 +157,14 @@ export default function SettingsPage({ onLogout }) {
   const toggleAnilist = (v) => { setAnilistEnabled(v); saveSetting('anilist_enabled', v) }
   const toggleFuzzy = (v) => { setAnilistFuzzySearch(v); saveSetting('anilist_fuzzy_search', v) }
 
-  const moveProvider = (idx, dir) => {
-    setProviderOrder(prev => {
-      const next = [...prev]
+  const moveProvider = (type, idx, dir) => {
+    setProviderOrders(prev => {
+      const next = [...prev[type]]
       const swap = idx + dir
       if (swap < 0 || swap >= next.length) return prev
       ;[next[idx], next[swap]] = [next[swap], next[idx]]
-      saveSetting('provider_order', JSON.stringify(next))
-      return next
+      saveSetting(`provider_order_${type}`, JSON.stringify(next))
+      return { ...prev, [type]: next }
     })
   }
 
@@ -397,32 +403,38 @@ export default function SettingsPage({ onLogout }) {
               </div>
             </div>
 
-            <div className="settings-section">
-              <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>⚡</span> Priority Order
-              </div>
-              <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 16, lineHeight: 1.6 }}>
-                Artwork within each category is grouped by provider in this order.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {providerOrder.map((p, i) => (
-                  <div key={p} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    background: 'var(--bg-3)', border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-sm)', padding: '8px 12px',
-                  }}>
-                    <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-3)', width: 18 }}>{i + 1}</span>
-                    <span style={{ flex: 1, fontSize: 13.5, color: 'var(--text)', fontWeight: 500 }}>{p}</span>
-                    <div style={{ display: 'flex', gap: 2 }}>
-                      <button className="btn btn-ghost btn-sm" style={{ padding: '2px 6px' }}
-                        onClick={() => moveProvider(i, -1)} disabled={i === 0} title="Move up">↑</button>
-                      <button className="btn btn-ghost btn-sm" style={{ padding: '2px 6px' }}
-                        onClick={() => moveProvider(i, 1)} disabled={i === providerOrder.length - 1} title="Move down">↓</button>
+            {[
+              { type: 'show',  label: 'TV Shows' },
+              { type: 'movie', label: 'Movies' },
+              { type: 'anime', label: 'Anime' },
+            ].map(({ type, label }) => (
+              <div key={type} className="settings-section">
+                <div className="settings-section-title">
+                  <span style={{ fontSize: 16 }}>⚡</span> {label} Priority Order
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 16, lineHeight: 1.6 }}>
+                  Artwork for {label.toLowerCase()} is grouped by provider in this order.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {providerOrders[type].map((p, i) => (
+                    <div key={p} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      background: 'var(--bg-3)', border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)', padding: '8px 12px',
+                    }}>
+                      <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text-3)', width: 18 }}>{i + 1}</span>
+                      <span style={{ flex: 1, fontSize: 13.5, color: 'var(--text)', fontWeight: 500 }}>{p}</span>
+                      <div style={{ display: 'flex', gap: 2 }}>
+                        <button className="btn btn-ghost btn-sm" style={{ padding: '2px 6px' }}
+                          onClick={() => moveProvider(type, i, -1)} disabled={i === 0} title="Move up">↑</button>
+                        <button className="btn btn-ghost btn-sm" style={{ padding: '2px 6px' }}
+                          onClick={() => moveProvider(type, i, 1)} disabled={i === providerOrders[type].length - 1} title="Move down">↓</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
@@ -444,8 +456,13 @@ export default function SettingsPage({ onLogout }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="settings-section" style={{ marginTop: 24, maxWidth: '100%', borderColor: 'var(--red)', borderWidth: 1, borderStyle: 'solid' }}>
+      {/* System */}
+      {tab === 'system' && (
+        <div style={{ padding: '0 32px 32px' }}>
+          <div className="settings-section" style={{ maxWidth: '100%', borderColor: 'var(--red)', borderWidth: 1, borderStyle: 'solid' }}>
             <div className="settings-section-title" style={{ color: 'var(--red)' }}>
               <AlertTriangle size={14} /> Danger Zone
             </div>
