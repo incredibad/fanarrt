@@ -369,7 +369,8 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
             ) : (
               <>
                 <div className="type-filter-bar">
-                  <div className="type-filter-row" style={{ alignItems: 'center' }}>
+                  {/* Row 1: Art type tabs */}
+                  <div className="type-filter-row">
                     <div className="type-filter-tabs">
                       {availableArtTypes.map(t => (
                         <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
@@ -383,61 +384,61 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    <div className="type-right-chips">
-                      {enabledSources.length > 1 && (
-                        <div className="type-provider-chips">
-                          <button
-                            className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
-                            onClick={() => setArtSourceFilter('all')}
+                  {/* Row 2: Provider + resolution chips + download */}
+                  <div className="type-right-chips">
+                    {enabledSources.length > 1 && (
+                      <div className="type-provider-chips">
+                        <button
+                          className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
+                          onClick={() => setArtSourceFilter('all')}
+                          style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
+                        >All</button>
+                        {enabledSources.map(src => (
+                          <button key={src}
+                            className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
+                            onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
                             style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
-                          >All</button>
-                          {enabledSources.map(src => (
-                            <button key={src}
-                              className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
-                              onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
-                              style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
-                              title={`Show only ${PROVIDER_LABELS[src] || src}`}
-                            >
-                              {PROVIDER_LABELS[src] || src} ({displayedFavs.filter(f => f.source === src).length})
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {enabledSources.length > 1 && (
-                        <div className="filter-chip-divider" />
-                      )}
-
-                      {/* Resolution filter chips — always shown (static tiers) */}
-                      <div className="type-res-chips">
-                        <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                          onClick={() => setResFilter('all')}>All</button>
-                        {RES_TIERS.map(tier => (
-                          <button key={tier.id}
-                            className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                            onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                            title={`${tier.w}×${tier.h} only`}
-                          >{tier.label}</button>
+                            title={`Show only ${PROVIDER_LABELS[src] || src}`}
+                          >
+                            {PROVIDER_LABELS[src] || src} ({displayedFavs.filter(f => f.source === src).length})
+                          </button>
                         ))}
                       </div>
+                    )}
 
-                      {displayedFavs.length > 0 && (
-                        <>
-                          <div className="filter-chip-divider" />
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            style={{ flexShrink: 0 }}
-                            onClick={handleDownloadView}
-                            disabled={downloadingView}
-                            title="Download everything currently visible"
-                          >
-                            <Download size={13} />
-                            {downloadingView ? 'Zipping…' : 'Download View'}
-                          </button>
-                        </>
-                      )}
+                    {enabledSources.length > 1 && (
+                      <div className="filter-chip-divider" />
+                    )}
+
+                    <div className="type-res-chips">
+                      <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setResFilter('all')}>All</button>
+                      {RES_TIERS.map(tier => (
+                        <button key={tier.id}
+                          className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                          onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                          title={`${tier.w}×${tier.h} only`}
+                        >{tier.label}</button>
+                      ))}
                     </div>
+
+                    {displayedFavs.length > 0 && (
+                      <>
+                        <div className="filter-chip-divider" />
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          style={{ flexShrink: 0 }}
+                          onClick={handleDownloadView}
+                          disabled={downloadingView}
+                          title="Download everything currently visible"
+                        >
+                          <Download size={13} />
+                          {downloadingView ? 'Zipping…' : 'Download View'}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

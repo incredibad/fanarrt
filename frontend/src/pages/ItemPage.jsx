@@ -344,8 +344,8 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
       {/* Type + provider + resolution filter bar */}
       {fanartData.total > 0 && (
         <div className="type-filter-bar">
+          {/* Row 1: Art type tabs */}
           <div className="type-filter-row">
-            {/* Art type tabs */}
             <div className="type-filter-tabs">
               {availableTypes.map(t => (
                 <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
@@ -359,47 +359,46 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                 </button>
               ))}
             </div>
+          </div>
 
-            <div className="type-right-chips">
-              {/* Provider filter chips — shown when multiple sources are enabled in settings */}
-              {enabledSources.length > 1 && (
-                <div className="type-provider-chips">
-                  <button
-                    className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
-                    onClick={() => setActiveSource('all')}
+          {/* Row 2: Provider + resolution filter chips */}
+          <div className="type-right-chips">
+            {enabledSources.length > 1 && (
+              <div className="type-provider-chips">
+                <button
+                  className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
+                  onClick={() => setActiveSource('all')}
+                  style={{ cursor:'pointer', border:'none', fontSize:10 }}
+                >
+                  All
+                </button>
+                {enabledSources.map(src => (
+                  <button key={src}
+                    className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
+                    onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
                     style={{ cursor:'pointer', border:'none', fontSize:10 }}
+                    title={`Show only ${PROVIDER_LABELS[src] || src}`}
                   >
-                    All
+                    {PROVIDER_LABELS[src] || src} ({fanartData.fanart?.filter(f => f.source === src).length})
                   </button>
-                  {enabledSources.map(src => (
-                    <button key={src}
-                      className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
-                      onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
-                      style={{ cursor:'pointer', border:'none', fontSize:10 }}
-                      title={`Show only ${PROVIDER_LABELS[src] || src}`}
-                    >
-                      {PROVIDER_LABELS[src] || src} ({fanartData.fanart?.filter(f => f.source === src).length})
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {enabledSources.length > 1 && (
-                <div className="filter-chip-divider" />
-              )}
-
-              {/* Resolution filter chips — always shown (static tiers) */}
-              <div className="type-res-chips">
-                <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setResFilter('all')}>All</button>
-                {RES_TIERS.map(tier => (
-                  <button key={tier.id}
-                    className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                    onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                    title={`${tier.w}×${tier.h} only`}
-                  >{tier.label}</button>
                 ))}
               </div>
+            )}
+
+            {enabledSources.length > 1 && (
+              <div className="filter-chip-divider" />
+            )}
+
+            <div className="type-res-chips">
+              <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setResFilter('all')}>All</button>
+              {RES_TIERS.map(tier => (
+                <button key={tier.id}
+                  className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                  onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                  title={`${tier.w}×${tier.h} only`}
+                >{tier.label}</button>
+              ))}
             </div>
           </div>
         </div>
