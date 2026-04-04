@@ -70,18 +70,8 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
       <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
           <div className="logo-mark">
-            <div className="logo-icon" style={{ background: 'none', padding: 0, width: 34, height: 34 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28" style={{ display: 'block' }}>
-                <polygon
-                  points="20,2 24.4,13.9 37.1,14.4 27.1,22.3 30.6,34.6 20,27.5 9.4,34.6 12.9,22.3 2.9,14.4 15.6,13.9"
-                  fill="#6366f1"
-                />
-              </svg>
-            </div>
-            <div className="sidebar-logo-text">
-              <div className="logo-title">Fanarrt</div>
-              <div className="logo-sub">v1.2</div>
-            </div>
+            <img src="/logo.svg" alt="Fanarrt" className="logo-img" />
+            <div className="logo-title sidebar-logo-text">Fanarrt</div>
           </div>
         </div>
 
