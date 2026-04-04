@@ -345,20 +345,18 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
       {fanartData.total > 0 && (
         <div className="type-filter-bar">
           {/* Row 1: Art type tabs */}
-          <div className="type-filter-row">
-            <div className="type-filter-tabs">
-              {availableTypes.map(t => (
-                <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
-                  onClick={() => setActiveType(t)}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                  {t !== 'all' && fanartData.grouped[t] && (
-                    <span style={{ marginLeft:5, fontSize:11, opacity:0.6 }}>
-                      {fanartData.grouped[t].length}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+          <div className="type-filter-tabs">
+            {availableTypes.map(t => (
+              <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
+                onClick={() => setActiveType(t)}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t !== 'all' && fanartData.grouped[t] && (
+                  <span style={{ marginLeft:5, fontSize:11, opacity:0.6 }}>
+                    {fanartData.grouped[t].length}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Row 2: Provider + resolution filter chips */}
