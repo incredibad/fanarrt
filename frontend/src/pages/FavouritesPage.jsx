@@ -10,10 +10,14 @@ import { CollectionPicker } from '../components/FanartGrid'
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
 const RES_TIERS = [
-  { id: 'hd',  label: 'HD',  min: 1280, max: 1920 },
-  { id: 'fhd', label: 'FHD', min: 1920, max: 3840 },
-  { id: '4k',  label: '4K',  min: 3840, max: Infinity },
+  { id: 'hd',  label: 'HD',  w: 1280, h: 720 },
+  { id: 'fhd', label: 'FHD', w: 1920, h: 1080 },
+  { id: '4k',  label: '4K',  w: 3840, h: 2160 },
 ]
+
+function tierMatch(width, height, tier) {
+  return (width === tier.w && height === tier.h) || (width === tier.h && height === tier.w)
+}
 
 export default function FavouritesPage({ onFavCountChange, activeCollection, activeCollectionId, collections = [], onCollectionRename, onCollectionDelete }) {
   const navigate = useNavigate()
@@ -90,19 +94,15 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       if (typeFilter !== 'all' && f.media_type !== typeFilter) return false
       if (search && !f.media_title.toLowerCase().includes(search.toLowerCase())) return false
       if (resFilter !== 'all') {
-        const long = Math.max(f.width || 0, f.height || 0)
         const tier = RES_TIERS.find(t => t.id === resFilter)
-        if (long < tier.min || long >= tier.max) return false
+        if (!tierMatch(f.width, f.height, tier)) return false
       }
       return true
     })
   }, [allFavs, selectedId, typeFilter, search, resFilter])
 
   const favResTiers = useMemo(() =>
-    RES_TIERS.filter(t => allFavs.some(f => {
-      const long = Math.max(f.width || 0, f.height || 0)
-      return long >= t.min && long < t.max
-    }))
+    RES_TIERS.filter(t => allFavs.some(f => tierMatch(f.width, f.height, t)))
   , [allFavs])
 
   const handleRemove = async (fav) => {
@@ -361,7 +361,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                   <button key={tier.id}
                     className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
                     onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                    title={tier.max === Infinity ? `Show only ${tier.label} (≥${tier.min}px)` : `Show only ${tier.label} (${tier.min}–${tier.max - 1}px)`}
+                    title={`${tier.w}×${tier.h} only`}
                   >{tier.label}</button>
                 ))}
               </div>
@@ -429,10 +429,9 @@ const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', '
 function resLabel(w, h, type) {
   if (!w || !h) return null
   if (type === 'background' || type === 'banner') {
-    const long = Math.max(w, h)
-    if (long >= 3840) return '4K'
-    if (long >= 1920) return 'FHD'
-    if (long >= 1280) return 'HD'
+    if ((w === 3840 && h === 2160) || (w === 2160 && h === 3840)) return '4K'
+    if ((w === 1920 && h === 1080) || (w === 1080 && h === 1920)) return 'FHD'
+    if ((w === 1280 && h === 720)  || (w === 720  && h === 1280))  return 'HD'
   }
   return `${w}×${h}`
 }

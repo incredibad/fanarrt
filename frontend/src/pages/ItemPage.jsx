@@ -51,10 +51,14 @@ function providerLinks(item) {
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
 const RES_TIERS = [
-  { id: 'hd',  label: 'HD',  min: 1280, max: 1920 },
-  { id: 'fhd', label: 'FHD', min: 1920, max: 3840 },
-  { id: '4k',  label: '4K',  min: 3840, max: Infinity },
+  { id: 'hd',  label: 'HD',  w: 1280, h: 720 },
+  { id: 'fhd', label: 'FHD', w: 1920, h: 1080 },
+  { id: '4k',  label: '4K',  w: 3840, h: 2160 },
 ]
+
+function tierMatch(width, height, tier) {
+  return (width === tier.w && height === tier.h) || (width === tier.h && height === tier.w)
+}
 
 export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
   const { id } = useParams()
@@ -201,10 +205,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     t === 'all' || fanartData.grouped[t]?.length > 0
   )
   const availableResTiers = RES_TIERS.filter(t =>
-    (fanartData.fanart || []).some(f => {
-      const long = Math.max(f.width || 0, f.height || 0)
-      return long >= t.min && long < t.max
-    })
+    (fanartData.fanart || []).some(f => tierMatch(f.width, f.height, t))
   )
 
   // Apply source + resolution filter to grouped data
@@ -217,10 +218,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     let filtered = activeSource === 'all' ? arts : arts.filter(a => a.source === activeSource)
     if (resFilter !== 'all') {
       const tier = RES_TIERS.find(t => t.id === resFilter)
-      filtered = filtered.filter(a => {
-        const long = Math.max(a.width || 0, a.height || 0)
-        return long >= tier.min && long < tier.max
-      })
+      filtered = filtered.filter(a => tierMatch(a.width, a.height, tier))
     }
     if (filtered.length > 0) filteredGrouped[type] = filtered
   }
@@ -372,7 +370,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                     <button key={tier.id}
                       className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
                       onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                      title={tier.max === Infinity ? `Show only ${tier.label} (≥${tier.min}px)` : `Show only ${tier.label} (${tier.min}–${tier.max - 1}px)`}
+                      title={`${tier.w}×${tier.h} only`}
                     >{tier.label}</button>
                   ))}
                 </div>
