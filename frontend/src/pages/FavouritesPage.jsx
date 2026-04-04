@@ -365,19 +365,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               <>
                 <div className="type-filter-bar">
                   <div className="type-filter-row" style={{ alignItems: 'center' }}>
-                    {displayedFavs.length > 0 && (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        style={{ flexShrink: 0, marginRight: 8 }}
-                        onClick={handleDownloadView}
-                        disabled={downloadingView}
-                        title="Download everything currently visible"
-                      >
-                        <Download size={13} />
-                        {downloadingView ? 'Zipping…' : 'Download View'}
-                      </button>
-                    )}
-
                     <div className="type-filter-tabs">
                       {availableArtTypes.map(t => (
                         <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
@@ -429,6 +416,24 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                             >{tier.label}</button>
                           ))}
                         </div>
+                      )}
+
+                      {displayedFavs.length > 0 && (
+                        <>
+                          {(availableSources.length > 1 || availableResTiers.length > 0) && (
+                            <div className="filter-chip-divider" />
+                          )}
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ flexShrink: 0 }}
+                            onClick={handleDownloadView}
+                            disabled={downloadingView}
+                            title="Download everything currently visible"
+                          >
+                            <Download size={13} />
+                            {downloadingView ? 'Zipping…' : 'Download View'}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
