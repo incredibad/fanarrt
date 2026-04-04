@@ -33,11 +33,9 @@ export default function SetupPage({ onComplete }) {
       <div className="auth-card">
         <div className="auth-logo">
           <img src="/logo.svg" alt="Fanarrt" style={{ height: 44, width: 'auto', flexShrink: 0 }} />
-          <div>
-            <div className="auth-app-name">Fanarrt</div>
-            <div className="auth-app-sub">Initial Setup</div>
-          </div>
+          <div className="auth-app-name">Fanarrt</div>
         </div>
+        <div className="auth-app-sub">Initial Setup</div>
 
         <div className="auth-divider" />
 
