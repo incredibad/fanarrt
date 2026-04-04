@@ -196,26 +196,54 @@ async function fetchFanartTvMovie(tmdbId, mediaItemId) {
   }
 }
 
-// ─── Anime-Lists mapping (TVDB → MAL ID) ──────────────────────────────────────
-// Community-maintained mapping used by Sonarr, Plex, etc.
-// https://github.com/Anime-Lists/anime-lists
+// ─── Anime ID mapping (TVDB → MAL) ────────────────────────────────────────────
+// Two-step lookup:
+//   1. anime-lists XML:  TVDB ID  → AniDB ID  (+ direct malid when present)
+//   2. Fribb JSON:       AniDB ID → MAL ID
+// Both files are cached for 24 hours.
 
 let animeListXml = null;
-let animeListFetchedAt = 0;
+let animeListXmlAt = 0;
 
-async function getMalIdForTvdb(tvdbId) {
-  if (!animeListXml || Date.now() - animeListFetchedAt > 24 * 60 * 60 * 1000) {
+let fribbMap = null; // Map<anidbId:number, malId:number>
+let fribbMapAt = 0;
+
+async function getAnimeListXml() {
+  if (!animeListXml || Date.now() - animeListXmlAt > 24 * 60 * 60 * 1000) {
     const res = await fetch('https://raw.githubusercontent.com/Anime-Lists/anime-lists/master/anime-list.xml');
     if (!res.ok) throw new Error(`anime-lists HTTP ${res.status}`);
     animeListXml = await res.text();
-    animeListFetchedAt = Date.now();
+    animeListXmlAt = Date.now();
   }
-  const el = animeListXml.match(new RegExp(`<anime\\s[^>]*tvdbid="${tvdbId}"[^>]*>`, 'i'));
-  console.log(`[anime-lists] tvdbid=${tvdbId} el=${el ? el[0].slice(0,120) : 'NOT FOUND'}`);
+  return animeListXml;
+}
+
+async function getFribbMap() {
+  if (!fribbMap || Date.now() - fribbMapAt > 24 * 60 * 60 * 1000) {
+    const res = await fetch('https://raw.githubusercontent.com/Fribb/anime-lists/master/anime-list-full.json');
+    if (!res.ok) throw new Error(`Fribb anime-lists HTTP ${res.status}`);
+    const arr = await res.json();
+    fribbMap = new Map(arr.filter(e => e.anidb_id && e.mal_id).map(e => [e.anidb_id, e.mal_id]));
+    fribbMapAt = Date.now();
+  }
+  return fribbMap;
+}
+
+async function getMalIdForTvdb(tvdbId) {
+  const xml = await getAnimeListXml();
+  const el = xml.match(new RegExp(`<anime\\s[^>]*tvdbid="${tvdbId}"[^>]*>`, 'i'));
   if (!el) return null;
-  const mal = el[0].match(/\bmalid="(\d+)"/i);
-  console.log(`[anime-lists] malid match=${JSON.stringify(mal)}`);
-  return mal ? mal[1] : null;
+
+  // Some entries have malid directly
+  const directMal = el[0].match(/\bmalid="(\d+)"/i);
+  if (directMal) return directMal[1];
+
+  // Fall back to AniDB ID → MAL ID via Fribb
+  const anidbMatch = el[0].match(/\banidbid="(\d+)"/i);
+  if (!anidbMatch) return null;
+  const fribb = await getFribbMap();
+  const malId = fribb.get(parseInt(anidbMatch[1]));
+  return malId ? String(malId) : null;
 }
 
 // ─── AniList ──────────────────────────────────────────────────────────────────
