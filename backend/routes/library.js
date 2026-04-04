@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const db = require('../db/database');
+const settings = require('../services/settings');
 const { syncSonarr, syncRadarr } = require('../services/arrSync');
 const { fetchFanartForItem } = require('../services/fanartFetch');
 const { downloadItemAll } = require('../services/download');
@@ -164,7 +165,7 @@ router.get('/:id/download', async (req, res) => {
 
 // GET /api/library/:id/needs-refresh - returns whether auto-fetch should run (48h window)
 router.get('/:id/needs-refresh', (req, res) => {
-  const item = db.prepare('SELECT fanart_fetched_at FROM media_items WHERE id=?').get(req.params.id);
+  const item = db.prepare('SELECT type, fanart_fetched_at FROM media_items WHERE id=?').get(req.params.id);
   if (!item) return res.status(404).json({ error: 'Not found' });
 
   const fanartCount = db.prepare('SELECT COUNT(*) as c FROM fanart WHERE media_item_id=?').get(req.params.id).c;
@@ -177,6 +178,13 @@ router.get('/:id/needs-refresh', (req, res) => {
     const hoursSince = (Date.now() - fetchedAt) / (1000 * 60 * 60);
     needsRefresh = hoursSince >= 48;
   }
+
+  // If AniList was enabled after fanart was already fetched, trigger a refresh
+  if (!needsRefresh && item.type === 'anime' && settings.get('anilist_enabled') !== false) {
+    const hasAnilist = db.prepare('SELECT 1 FROM fanart WHERE media_item_id=? AND source=? LIMIT 1').get(req.params.id, 'anilist');
+    if (!hasAnilist) needsRefresh = true;
+  }
+
   res.json({ needsRefresh, fanart_fetched_at: item.fanart_fetched_at });
 });
 
