@@ -425,11 +425,12 @@ const TYPE_ORDER = ['background', 'poster', 'banner', 'clearlogo', 'clearart', '
 
 function resLabel(w, h, type) {
   if (!w || !h) return null
-  if (type === 'poster') return `${w}×${h}`
-  const long = Math.max(w, h)
-  if (long >= 3840) return '4K'
-  if (long >= 1920) return 'FHD'
-  if (long >= 1280) return 'HD'
+  if (type === 'background' || type === 'banner') {
+    const long = Math.max(w, h)
+    if (long >= 3840) return '4K'
+    if (long >= 1920) return 'FHD'
+    if (long >= 1280) return 'HD'
+  }
   return `${w}×${h}`
 }
 

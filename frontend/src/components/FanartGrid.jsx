@@ -16,14 +16,12 @@ function thumbUrl(art) {
 
 function resLabel(width, height, type) {
   if (!width || !height) return null
-  if (type === 'poster') {
-    if (height >= 2160) return '4K'
-    return `${width}×${height}`
+  if (type === 'background' || type === 'banner') {
+    const long = Math.max(width, height)
+    if (long >= 3840) return '4K'
+    if (long >= 1920) return 'FHD'
+    if (long >= 1280) return 'HD'
   }
-  const long = Math.max(width, height)
-  if (long >= 3840) return '4K'
-  if (long >= 1920) return 'FHD'
-  if (long >= 1280) return 'HD'
   return `${width}×${height}`
 }
 
