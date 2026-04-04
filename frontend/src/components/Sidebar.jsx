@@ -87,7 +87,7 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
           {collections.map(col => (
             <button
               key={col.id}
-              className={`nav-item ${col.id === activeCollectionId ? 'active' : ''}`}
+              className={`nav-item ${col.id === activeCollectionId ? 'collection-active' : ''}`}
               onClick={() => handleCollectionClick(col.id)}
             >
               <FolderOpen size={15} />
