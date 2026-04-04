@@ -498,17 +498,9 @@ body {
   text-transform: uppercase;
 }
 
-.badge-show {
-  background: rgba(99,102,241,0.85);
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
-
-.badge-movie {
-  background: rgba(167,139,250,0.85);
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
+.badge-show  { background: rgba(220,38,38,0.85);   color: #fff; backdrop-filter: blur(4px); } /* red    */
+.badge-movie { background: rgba(124,58,237,0.85);  color: #fff; backdrop-filter: blur(4px); } /* violet */
+.badge-anime { background: rgba(219,39,119,0.85);  color: #fff; backdrop-filter: blur(4px); } /* pink   */
 
 .fav-count-badge {
   position: absolute;
@@ -1033,6 +1025,7 @@ body {
   white-space: nowrap;
   flex-shrink: 0;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .type-mode-anime { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
@@ -1394,6 +1387,7 @@ body {
   letter-spacing: 0.04em;
   line-height: 1.4;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 /* Solid opaque colours per provider — readable on any background */
