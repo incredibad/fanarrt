@@ -38,14 +38,13 @@ function getFilename(image, itemTitle) {
   const title = (itemTitle || '')
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim()
-    .replace(/\s+/g, '_')
-    .slice(0, 16) || 'unknown'
-  const provider = image.source.replace('.', '').replace(/[^a-zA-Z0-9]/g, '')
+    .replace(/\s+/g, '_') || 'unknown'
+  const provider = image.source.replace(/[^a-zA-Z0-9]/g, '')
   const res = (image.width && image.height) ? `${image.width}x${image.height}` : null
   const lang = normLang(image.language)
   const counter = String(++dlCounter).padStart(3, '0')
-  const parts = [title, image.type, provider, res, lang, counter].filter(Boolean)
-  return `${parts.join('_')}.${ext}`
+  const segments = [image.type, provider, res, lang, counter].filter(Boolean)
+  return `${title}-${segments.join('-')}.${ext}`
 }
 
 async function downloadImage(url, filename) {
