@@ -157,8 +157,11 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
   const srcLabel = PROVIDER_LABELS[art.source] || art.source.toUpperCase()
   const dims = liveDims || (art.width && art.height ? { w: art.width, h: art.height } : null)
   const res = dims ? resLabel(dims.w, dims.h, art.type) : null
-  const langCode = (art.language && art.language !== '' && art.language !== '00')
-    ? art.language.toUpperCase() : null
+  const langCode = (() => {
+    const raw = art.language
+    if (!raw || raw === '' || raw === '00') return null
+    try { return new Intl.Locale(raw).language.toUpperCase() } catch { return raw.slice(0, 2).toUpperCase() }
+  })()
 
   return (
     <div
