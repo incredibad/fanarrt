@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
-import DownloadMenu from '../components/DownloadMenu'
 import Lightbox from '../components/Lightbox'
 import { CollectionPicker } from '../components/FanartGrid'
 
@@ -243,9 +242,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               )}
             </div>
           </div>
-        </div>
-        <div className="page-actions">
-          {totalCount > 0 && <DownloadMenu label="Download All" />}
         </div>
       </div>
 
