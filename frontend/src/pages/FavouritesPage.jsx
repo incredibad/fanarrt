@@ -108,9 +108,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     setResFilter('all')
   }, [selectedId, typeFilter, search])
 
-  const availableArtTypes = useMemo(() =>
-    ['all', ...TYPE_ORDER.filter(t => displayedFavs.some(f => f.type === t))]
-  , [displayedFavs])
+  const availableArtTypes = ['all', ...TYPE_ORDER]
 
   const enabledSources = useMemo(() => {
     const all = ['fanart.tv', 'tvdb', 'tmdb', 'anilist']
