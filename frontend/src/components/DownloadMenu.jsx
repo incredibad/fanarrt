@@ -41,7 +41,7 @@ export default function DownloadMenu({ mediaItemId, label = 'Download Favourites
           <a
             className="dropdown-item"
             href={api.downloadUrl.all}
-            download="fanart_library.zip"
+            download="favourites-download.zip"
             onClick={() => setOpen(false)}
           >
             <Download size={14} />
@@ -51,7 +51,7 @@ export default function DownloadMenu({ mediaItemId, label = 'Download Favourites
           <a
             className="dropdown-item"
             href={api.downloadUrl.shows}
-            download="tv_shows_fanart.zip"
+            download="favourites-download.zip"
             onClick={() => setOpen(false)}
           >
             <Download size={14} />
@@ -60,7 +60,7 @@ export default function DownloadMenu({ mediaItemId, label = 'Download Favourites
           <a
             className="dropdown-item"
             href={api.downloadUrl.movies}
-            download="movies_fanart.zip"
+            download="favourites-download.zip"
             onClick={() => setOpen(false)}
           >
             <Download size={14} />
