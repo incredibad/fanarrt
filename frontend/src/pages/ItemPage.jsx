@@ -66,6 +66,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   const backTo = location.state?.from || null
   const [item, setItem] = useState(null)
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
+  const [settings, setSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const [fetching, setFetching] = useState(false)
   const [autoFetching, setAutoFetching] = useState(false)
@@ -85,15 +86,16 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
   const loadItem = useCallback(async () => {
     try {
-      const [itemData, fanart, settings] = await Promise.all([
+      const [itemData, fanart, loadedSettings] = await Promise.all([
         api.getItem(id),
         api.getItemFanart(id, { collection_id: activeCollectionId }),
         api.getSettings(),
       ])
       setItem(itemData)
       setFanartData(fanart)
+      setSettings(loadedSettings)
       setFavCount(fanart.fanart.filter(f => f.favourite_id).length)
-      const defaults = settings[`default_filters_${itemData.type}`]
+      const defaults = loadedSettings[`default_filters_${itemData.type}`]
       if (defaults) {
         setActiveType(defaults.artType || 'all')
         setActiveSource(defaults.source || 'all')
@@ -210,14 +212,24 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   if (loading) return <div className="loading-overlay" style={{ flex: 1 }}><div className="spinner" />Loading…</div>
   if (!item) return <div className="empty-state" style={{ flex: 1 }}><h3>Item not found</h3></div>
 
-  // Derive available types, sources, and resolution tiers from current data
-  const allSources = [...new Set(fanartData.fanart?.map(f => f.source) || [])]
+  // Derive available types from current data
   const availableTypes = ART_TYPES.filter(t =>
     t === 'all' || fanartData.grouped[t]?.length > 0
   )
-  const availableResTiers = RES_TIERS.filter(t =>
-    (fanartData.fanart || []).some(f => tierMatch(f.width, f.height, t))
-  )
+
+  // Sources enabled in settings (API key configured / toggle on)
+  const ALL_SOURCES_BY_TYPE = {
+    show:  ['fanart.tv', 'tvdb', 'tmdb'],
+    movie: ['fanart.tv', 'tmdb'],
+    anime: ['fanart.tv', 'tvdb', 'tmdb', 'anilist'],
+  }
+  const enabledSources = (ALL_SOURCES_BY_TYPE[item.type] || []).filter(src => {
+    if (src === 'tvdb')      return !!settings.tvdb_api_key
+    if (src === 'tmdb')      return !!settings.tmdb_api_key
+    if (src === 'fanart.tv') return !!settings.fanart_api_key
+    if (src === 'anilist')   return !!settings.anilist_enabled
+    return true
+  })
 
   // Apply source + resolution filter to grouped data
   const filteredGrouped = {}
@@ -351,8 +363,8 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
             </div>
 
             <div className="type-right-chips">
-              {/* Provider filter chips */}
-              {allSources.length > 1 && (
+              {/* Provider filter chips — shown when multiple sources are enabled in settings */}
+              {enabledSources.length > 1 && (
                 <div className="type-provider-chips">
                   <button
                     className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
@@ -361,7 +373,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                   >
                     All
                   </button>
-                  {allSources.map(src => (
+                  {enabledSources.map(src => (
                     <button key={src}
                       className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
                       onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
@@ -374,24 +386,22 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                 </div>
               )}
 
-              {allSources.length > 1 && availableResTiers.length > 0 && (
+              {enabledSources.length > 1 && (
                 <div className="filter-chip-divider" />
               )}
 
-              {/* Resolution filter chips */}
-              {availableResTiers.length > 0 && (
-                <div className="type-res-chips">
-                  <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                    onClick={() => setResFilter('all')}>All</button>
-                  {availableResTiers.map(tier => (
-                    <button key={tier.id}
-                      className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                      onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                      title={`${tier.w}×${tier.h} only`}
-                    >{tier.label}</button>
-                  ))}
-                </div>
-              )}
+              {/* Resolution filter chips — always shown (static tiers) */}
+              <div className="type-res-chips">
+                <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setResFilter('all')}>All</button>
+                {RES_TIERS.map(tier => (
+                  <button key={tier.id}
+                    className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                    onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                    title={`${tier.w}×${tier.h} only`}
+                  >{tier.label}</button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
