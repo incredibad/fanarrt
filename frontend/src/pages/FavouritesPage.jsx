@@ -339,6 +339,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                       <span className="nav-badge">{s.count}</span>
                       <Link
                         to={`/item/${s.id}`}
+                        state={{ from: s.type === 'movie' ? '/movies' : s.type === 'anime' ? '/anime' : '/shows' }}
                         onClick={e => e.stopPropagation()}
                         title={`Go to ${s.title}`}
                         style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4 }}
