@@ -372,7 +372,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                     <button key={tier.id}
                       className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
                       onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                      title={`Show only ${tier.label} and above`}
+                      title={tier.max === Infinity ? `Show only ${tier.label} (≥${tier.min}px)` : `Show only ${tier.label} (${tier.min}–${tier.max - 1}px)`}
                     >{tier.label}</button>
                   ))}
                 </div>
