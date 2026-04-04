@@ -333,7 +333,7 @@ export default function SettingsPage({ onLogout }) {
                     Fetch anime artwork from AniList
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
-                    No API key required. Only used for anime when a confirmed MAL ID is found via TVDB — never guesses by title.
+                    Fetches posters and banners for anime. Looks up the MAL ID from TVDB metadata and community mapping files, then queries AniList by that ID. No API key required.
                   </div>
                 </div>
                 <button
@@ -361,7 +361,7 @@ export default function SettingsPage({ onLogout }) {
                     Fuzzy title search fallback
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
-                    When no MAL ID can be found via TVDB mapping, fall back to searching AniList by title. May return incorrect results for ambiguous titles.
+                    If no MAL ID is found, search AniList by title instead. Useful for newer anime not yet in the mapping files, but may return wrong results for ambiguous titles.
                   </div>
                 </div>
                 <button
