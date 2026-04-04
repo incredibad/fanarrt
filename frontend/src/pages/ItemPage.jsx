@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useParams, Link, useLocation } from 'react-router-dom'
-import { ArrowLeft, RefreshCw, Star, Film, Tv, Zap, AlertTriangle, Download } from 'lucide-react'
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Star, Film, Tv, Zap, AlertTriangle, Download } from 'lucide-react'
 import { api } from '../api'
 import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
 import DownloadMenu from '../components/DownloadMenu'
@@ -48,6 +48,17 @@ function providerLinks(item) {
   return links
 }
 
+function sortTitle(title) {
+  return title.replace(/^(the |a |an )/i, '').trimStart()
+}
+
+function typeFilterFromPath(path) {
+  if (path === '/shows') return 'show'
+  if (path === '/movies') return 'movie'
+  if (path === '/anime') return 'anime'
+  return undefined
+}
+
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
 const RES_TIERS = [
@@ -63,8 +74,10 @@ function tierMatch(width, height, tier) {
 export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
   const { id } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const backTo = location.state?.from || null
   const [item, setItem] = useState(null)
+  const [siblings, setSiblings] = useState([])
   const [fanartData, setFanartData] = useState({ grouped: {}, total: 0, fanart: [] })
   const [settings, setSettings] = useState({})
   const [loading, setLoading] = useState(true)
@@ -76,6 +89,22 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   const [imgError, setImgError] = useState(false)
   const [favCount, setFavCount] = useState(0)
   const didAutoFetch = useRef(false)
+
+  // Fetch sibling items for prev/next navigation — scoped to the library the user came from
+  useEffect(() => {
+    const params = { limit: 10000 }
+    const typeFilter = typeFilterFromPath(backTo)
+    if (typeFilter) params.type = typeFilter
+    if (activeCollectionId) params.collection_id = activeCollectionId
+    api.getLibrary(params)
+      .then(data => {
+        const sorted = data.items.slice().sort((a, b) =>
+          sortTitle(a.title).localeCompare(sortTitle(b.title))
+        )
+        setSiblings(sorted)
+      })
+      .catch(() => {})
+  }, [backTo, activeCollectionId])
 
   const loadFanart = useCallback(async () => {
     const fanart = await api.getItemFanart(id, { collection_id: activeCollectionId })
@@ -246,6 +275,15 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
   const idLinks = providerLinks(item)
 
+  const currentSiblingIdx = siblings.findIndex(s => String(s.id) === String(id))
+  const prevSibling = currentSiblingIdx > 0 ? siblings[currentSiblingIdx - 1] : null
+  const nextSibling = currentSiblingIdx >= 0 && currentSiblingIdx < siblings.length - 1
+    ? siblings[currentSiblingIdx + 1] : null
+
+  function navigateSibling(sibling) {
+    navigate(`/item/${sibling.id}`, { state: { from: backTo } })
+  }
+
   const backdropArt = fanartData.grouped?.background?.[0]
   const backdropSrc = backdropArt
     ? (backdropArt.source === 'fanart.tv'
@@ -257,6 +295,26 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     <div className="scroll-area">
       {/* Hero */}
       <div className="item-hero">
+        {siblings.length > 1 && (
+          <div className="item-hero-nav">
+            <button
+              className="item-hero-nav-btn"
+              onClick={() => prevSibling && navigateSibling(prevSibling)}
+              disabled={!prevSibling}
+              title={prevSibling ? prevSibling.title : undefined}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              className="item-hero-nav-btn"
+              onClick={() => nextSibling && navigateSibling(nextSibling)}
+              disabled={!nextSibling}
+              title={nextSibling ? nextSibling.title : undefined}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
         {backdropSrc && (
           <div className="item-hero-backdrop" style={{ backgroundImage: `url(${backdropSrc})` }} aria-hidden="true" />
         )}
