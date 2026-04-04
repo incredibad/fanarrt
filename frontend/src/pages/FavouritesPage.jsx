@@ -5,6 +5,7 @@ import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import Lightbox from '../components/Lightbox'
 import { CollectionPicker } from '../components/FanartGrid'
+import { TYPE_ORDER } from '../components/FanartGrid'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
@@ -30,6 +31,8 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   const [selectedId, setSelectedId] = useState(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [artTypeFilter, setArtTypeFilter] = useState('all')
+  const [artSourceFilter, setArtSourceFilter] = useState('all')
   const [resFilter, setResFilter] = useState('all')
 
   // ⋮ menu state
@@ -92,17 +95,40 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       if (selectedId && f.media_item_id !== selectedId) return false
       if (typeFilter !== 'all' && f.media_type !== typeFilter) return false
       if (search && !f.media_title.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
+  }, [allFavs, selectedId, typeFilter, search])
+
+  // Reset art-level filters when the base view changes
+  useEffect(() => {
+    setArtTypeFilter('all')
+    setArtSourceFilter('all')
+    setResFilter('all')
+  }, [selectedId, typeFilter, search])
+
+  const availableArtTypes = useMemo(() =>
+    ['all', ...TYPE_ORDER.filter(t => displayedFavs.some(f => f.type === t))]
+  , [displayedFavs])
+
+  const availableSources = useMemo(() =>
+    [...new Set(displayedFavs.map(f => f.source))]
+  , [displayedFavs])
+
+  const availableResTiers = useMemo(() =>
+    RES_TIERS.filter(t => displayedFavs.some(f => tierMatch(f.width, f.height, t)))
+  , [displayedFavs])
+
+  const gridFavs = useMemo(() => {
+    return displayedFavs.filter(f => {
+      if (artTypeFilter !== 'all' && f.type !== artTypeFilter) return false
+      if (artSourceFilter !== 'all' && f.source !== artSourceFilter) return false
       if (resFilter !== 'all') {
         const tier = RES_TIERS.find(t => t.id === resFilter)
         if (!tierMatch(f.width, f.height, tier)) return false
       }
       return true
     })
-  }, [allFavs, selectedId, typeFilter, search, resFilter])
-
-  const favResTiers = useMemo(() =>
-    RES_TIERS.filter(t => allFavs.some(f => tierMatch(f.width, f.height, t)))
-  , [allFavs])
+  }, [displayedFavs, artTypeFilter, artSourceFilter, resFilter])
 
   const handleRemove = async (fav) => {
     try {
@@ -162,13 +188,13 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   }
 
   const handleDownloadView = async () => {
-    if (displayedFavs.length === 0) return
+    if (gridFavs.length === 0) return
     const label = selectedItem
       ? selectedItem.title
       : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : (activeCollection?.name || 'Collection')
     setDownloadingView(true)
     try {
-      const res = await api.downloadView(displayedFavs.map(f => f.fanart_id), label)
+      const res = await api.downloadView(gridFavs.map(f => f.fanart_id), label)
       if (!res.ok) throw new Error('Download failed')
       const blob = await res.blob()
       const href = URL.createObjectURL(blob)
@@ -338,40 +364,79 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               </div>
             ) : (
               <>
-                <div style={{
-                  padding: '8px 20px', borderBottom: '1px solid var(--border-soft)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 8
-                }}>
-                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {favResTiers.length > 0 && (
-                      <>
-                        <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                          onClick={() => setResFilter('all')}>All</button>
-                        {favResTiers.map(tier => (
-                          <button key={tier.id}
-                            className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                            onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                            title={`${tier.w}×${tier.h} only`}
-                          >{tier.label}</button>
-                        ))}
-                      </>
+                <div className="type-filter-bar">
+                  <div className="type-filter-row" style={{ alignItems: 'center' }}>
+                    {displayedFavs.length > 0 && (
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ flexShrink: 0, marginRight: 8 }}
+                        onClick={handleDownloadView}
+                        disabled={downloadingView}
+                        title="Download everything currently visible"
+                      >
+                        <Download size={13} />
+                        {downloadingView ? 'Zipping…' : 'Download View'}
+                      </button>
                     )}
+
+                    <div className="type-filter-tabs">
+                      {availableArtTypes.map(t => (
+                        <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
+                          onClick={() => setArtTypeFilter(t)}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                          {t !== 'all' && (
+                            <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
+                              {displayedFavs.filter(f => f.type === t).length}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="type-right-chips">
+                      {availableSources.length > 1 && (
+                        <div className="type-provider-chips">
+                          <button
+                            className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
+                            onClick={() => setArtSourceFilter('all')}
+                            style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
+                          >All</button>
+                          {availableSources.map(src => (
+                            <button key={src}
+                              className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
+                              onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
+                              style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
+                              title={`Show only ${PROVIDER_LABELS[src] || src}`}
+                            >
+                              {PROVIDER_LABELS[src] || src} {displayedFavs.filter(f => f.source === src).length}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {availableSources.length > 1 && availableResTiers.length > 0 && (
+                        <div className="filter-chip-divider" />
+                      )}
+
+                      {availableResTiers.length > 0 && (
+                        <div className="type-res-chips">
+                          <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                            onClick={() => setResFilter('all')}>All</button>
+                          {availableResTiers.map(tier => (
+                            <button key={tier.id}
+                              className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                              onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                              title={`${tier.w}×${tier.h} only`}
+                            >{tier.label}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {displayedFavs.length > 0 && (
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={handleDownloadView}
-                      disabled={downloadingView}
-                      title="Download everything currently visible"
-                    >
-                      <Download size={13} />
-                      {downloadingView ? 'Zipping…' : 'Download View'}
-                    </button>
-                  )}
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
-                  {displayedFavs.length === 0 ? (
+                  {gridFavs.length === 0 ? (
                     <div className="empty-state">
                       <Star size={36} />
                       <h3>Nothing here</h3>
@@ -379,7 +444,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                     </div>
                   ) : (
                     <GroupedFavGrid
-                      favs={displayedFavs}
+                      favs={gridFavs}
                       onRemove={handleRemove}
                       onOpen={setLightbox}
                       collections={collections}
