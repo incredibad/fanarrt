@@ -397,6 +397,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         activeType={activeType === 'all' ? null : activeType}
         collections={collections}
         activeCollectionId={activeCollectionId}
+        itemTitle={item.title}
       />
 
       {/* Mobile-only floating refresh FAB — portalled to body to escape overflow:hidden */}
