@@ -214,8 +214,10 @@ async function fetchAniListFanart(malId, mediaItemId) {
     });
     if (!res.ok) throw new Error(`AniList HTTP ${res.status}`);
     const json = await res.json();
+    if (json.errors) console.error(`[AniList] GraphQL errors for MAL ${malId}:`, JSON.stringify(json.errors));
     const media = json.data?.Media;
-    if (!media) return 0;
+    if (!media) { console.log(`[AniList] no Media returned for MAL ${malId}`); return 0; }
+    console.log(`[AniList] MAL ${malId} → cover=${media.coverImage?.extraLarge || 'none'}, banner=${media.bannerImage || 'none'}`);
 
     const stmt = db.prepare(`
       INSERT OR IGNORE INTO fanart(media_item_id, source, source_id, type, url, thumbnail_url, width, height, language, likes)
@@ -271,12 +273,18 @@ async function fetchFanartForItem(item) {
 
         // AniList: only when MAL ID is confirmed via TVDB remoteIds — no fuzzy search
         if (item.type === 'anime' && settings.get('anilist_enabled') !== false) {
+          console.log(`[AniList] remoteIds for "${item.title}":`, remoteIds.map(r => `${r.sourceName}=${r.id}`).join(', ') || '(none)');
           const malRemote = remoteIds.find(r => r.sourceName === 'MyAnimeList');
           if (malRemote) {
+            console.log(`[AniList] found MAL ID ${malRemote.id} for "${item.title}"`);
             total += await fetchAniListFanart(String(malRemote.id), item.id);
+          } else {
+            console.log(`[AniList] no MyAnimeList remoteId found for "${item.title}" — skipping`);
           }
         }
-      } catch {}
+      } catch (e) {
+        console.error(`[AniList] TVDB extended fetch failed for "${item.title}" (tvdb_id=${item.tvdb_id}):`, e.message);
+      }
     }
 
     if (tmdbId) total += await fetchTmdbFanartShow(tmdbId, item.id);
