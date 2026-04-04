@@ -239,30 +239,23 @@ async function fetchAniListByMalId(malId, mediaItemId) {
   return insertAniListFanart(media, `mal_${malId}`, mediaItemId);
 }
 
-// Strategy 2: title search, accepted only if AniList's own TVDB external link matches our tvdb_id
-async function fetchAniListByTvdbVerified(tvdbId, title, mediaItemId) {
+// Strategy 2: direct lookup by TVDB ID — confirmed match, no title search ambiguity
+async function fetchAniListByTvdbId(tvdbId, mediaItemId) {
   const json = await anilistQuery(
-    `query($search:String){Media(search:$search,type:ANIME){coverImage{extraLarge large}bannerImage externalLinks{site url}}}`,
-    { search: title }
+    `query($idTvdb:Int){Media(idTvdb:$idTvdb,type:ANIME){coverImage{extraLarge large}bannerImage}}`,
+    { idTvdb: parseInt(tvdbId) }
   );
+  console.log(`[AniList] idTvdb=${tvdbId} → media=${!!json.data?.Media}, errors=${JSON.stringify(json.errors)}`);
   const media = json.data?.Media;
-  console.log(`[AniList] search "${title}" → media=${!!media}, links=${JSON.stringify(media?.externalLinks?.map(l=>({site:l.site,url:l.url})))}`);
   if (!media) return 0;
-
-  const tvdbLink = media.externalLinks?.find(l => l.site === 'Thetvdb' || l.url?.includes('thetvdb.com'));
-  console.log(`[AniList] tvdbLink=${JSON.stringify(tvdbLink)}, our tvdb_id=${tvdbId}`);
-  if (!tvdbLink) return 0;
-  const tvdbIdFromLink = tvdbLink.url?.match(/(\d+)/)?.[1];
-  console.log(`[AniList] tvdbIdFromLink=${tvdbIdFromLink}, match=${tvdbIdFromLink === String(tvdbId)}`);
-  if (tvdbIdFromLink !== String(tvdbId)) return 0;
-
   return insertAniListFanart(media, `tvdb_${tvdbId}`, mediaItemId);
 }
 
 async function fetchAniListFanart(tvdbId, malId, title, mediaItemId) {
   try {
     if (malId) return await fetchAniListByMalId(malId, mediaItemId);
-    return await fetchAniListByTvdbVerified(tvdbId, title, mediaItemId);
+    if (tvdbId) return await fetchAniListByTvdbId(tvdbId, mediaItemId);
+    return 0;
   } catch (e) {
     console.error(`AniList fanart error for "${title}":`, e.message);
     return 0;
