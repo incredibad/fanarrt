@@ -25,14 +25,19 @@ function normLang(code) {
   }
 }
 
-function buildFilename(row, itemTitle, counter) {
+function buildBasename(row, itemTitle) {
   const title = sanitize(itemTitle || row.media_title || '');
   const provider = (row.source || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
   const res = (row.width && row.height) ? `${row.width}x${row.height}` : null;
   const lang = normLang(row.language);
-  const n = String(counter).padStart(3, '0');
-  const segments = [row.type, provider, res, lang, n].filter(Boolean);
+  const segments = [row.type, provider, res, lang].filter(Boolean);
   return `${title}-${segments.join('-')}`;
+}
+
+function buildFilename(row, itemTitle, counts) {
+  const base = buildBasename(row, itemTitle);
+  counts[base] = (counts[base] || 0) + 1;
+  return `${base}-${String(counts[base]).padStart(3, '0')}`;
 }
 
 async function streamImageToArchive(archive, url, filePath) {
@@ -66,9 +71,9 @@ async function downloadItemFavourites(mediaItemId, res) {
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
 
-  let counter = 0;
+  const counts = {};
   for (const fav of favs) {
-    const filePath = buildFilename(fav, item.title, ++counter);
+    const filePath = buildFilename(fav, item.title, counts);
     await streamImageToArchive(archive, fav.url, filePath);
   }
 
@@ -96,9 +101,9 @@ async function downloadAllFavourites(res) {
       WHERE fav.media_item_id = ?
     `).all(item.id);
 
-    let counter = 0;
+    const counts = {};
     for (const fav of favs) {
-      const filePath = buildFilename(fav, item.title, ++counter);
+      const filePath = buildFilename(fav, item.title, counts);
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -128,9 +133,9 @@ async function downloadTypeFavourites(type, res) {
       WHERE fav.media_item_id = ?
     `).all(item.id);
 
-    let counter = 0;
+    const counts = {};
     for (const fav of favs) {
-      const filePath = buildFilename(fav, item.title, ++counter);
+      const filePath = buildFilename(fav, item.title, counts);
       await streamImageToArchive(archive, fav.url, filePath);
     }
   }
@@ -158,11 +163,9 @@ async function downloadFanartIds(fanartIds, label, res) {
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
 
-  const counters = {};
+  const counts = {};
   for (const row of rows) {
-    const key = sanitize(row.media_title);
-    counters[key] = (counters[key] || 0) + 1;
-    const filePath = buildFilename(row, row.media_title, counters[key]);
+    const filePath = buildFilename(row, row.media_title, counts);
     await streamImageToArchive(archive, row.url, filePath);
   }
 
