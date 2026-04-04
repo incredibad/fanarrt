@@ -254,7 +254,7 @@ function groupBySource(arts) {
   return map
 }
 
-export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, activeType, collections, activeCollectionId, itemTitle }) {
+export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, activeType, collections, activeCollectionId, itemTitle, hasContent = false }) {
   const [lightboxImg, setLightboxImg] = useState(null)
   const [lightboxFav, setLightboxFav] = useState(false)
 
@@ -284,7 +284,13 @@ export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, a
     : TYPE_ORDER.filter(t => grouped[t]?.length > 0)
 
   if (types.length === 0) {
-    return (
+    return hasContent ? (
+      <div className="empty-state">
+        <Star size={40} />
+        <h3>No results</h3>
+        <p>No artwork matches the current filters. Try selecting a broader filter or "All".</p>
+      </div>
+    ) : (
       <div className="empty-state">
         <Star size={40} />
         <h3>No fanart found</h3>
