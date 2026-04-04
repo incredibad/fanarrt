@@ -793,26 +793,26 @@ body {
 }
 
 .type-filter-tabs .filter-tab {
-  padding: 3px 8px;
+  padding: 5px 11px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  background: var(--bg-3);
-  color: var(--text-3);
+  letter-spacing: 0.03em;
+  background: var(--bg-4);
+  color: var(--text-2);
   font-family: inherit;
 }
 
 .type-filter-tabs .filter-tab.active {
-  background: var(--bg-4);
+  background: #2a2e38;
   color: var(--text);
   outline: 2px solid rgba(255,255,255,0.9);
   outline-offset: 1px;
 }
 
 .type-filter-tabs .filter-tab:hover:not(.active) {
-  background: var(--bg-4);
-  color: var(--text-2);
+  background: #272b34;
+  color: var(--text);
 }
 
 /* Second row: provider + divider + resolution chips */
