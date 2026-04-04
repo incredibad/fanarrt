@@ -415,6 +415,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         collections={collections}
         activeCollectionId={activeCollectionId}
         itemTitle={item.title}
+        hasContent={fanartData.total > 0}
       />
 
       {/* Mobile-only floating refresh FAB — portalled to body to escape overflow:hidden */}
