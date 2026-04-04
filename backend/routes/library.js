@@ -81,11 +81,22 @@ router.get('/:id/fanart', (req, res) => {
   if (type) { where += ' AND f.type = ?'; params.push(type); }
   if (source) { where += ' AND f.source = ?'; params.push(source); }
 
-  // Get provider order from settings (default order if not set)
+  // Get type-specific provider order from settings
   const settings = require('../services/settings');
-  let providerOrder = ['fanart.tv', 'tvdb', 'tmdb'];
-  const savedOrder = settings.get('provider_order');
-  if (Array.isArray(savedOrder) && savedOrder.length) providerOrder = savedOrder;
+  const itemType = db.prepare('SELECT type FROM media_items WHERE id=?').get(req.params.id)?.type;
+  const TYPE_DEFAULTS = {
+    show:  ['fanart.tv', 'tvdb', 'tmdb'],
+    movie: ['fanart.tv', 'tmdb'],
+    anime: ['fanart.tv', 'tvdb', 'tmdb', 'anilist'],
+  };
+  const typeKey = itemType ? `provider_order_${itemType}` : null;
+  const savedTypeOrder = typeKey ? settings.get(typeKey) : null;
+  const savedGlobalOrder = settings.get('provider_order');
+  let providerOrder = (Array.isArray(savedTypeOrder) && savedTypeOrder.length)
+    ? savedTypeOrder
+    : (Array.isArray(savedGlobalOrder) && savedGlobalOrder.length)
+      ? savedGlobalOrder
+      : (TYPE_DEFAULTS[itemType] || ['fanart.tv', 'tvdb', 'tmdb']);
 
   if (settings.get('anilist_enabled') === false) {
     where += " AND f.source != 'anilist'";
