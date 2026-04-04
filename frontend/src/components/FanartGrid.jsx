@@ -191,16 +191,13 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
       <div className="fanart-meta-strip">
         <span className={`fanart-source-chip source-${art.source.replace('.', '-')}`}>{srcLabel}</span>
         {res && <span className="fanart-res-chip">{res}</span>}
+        {langCode && <span className="fanart-lang-chip">{langCode}</span>}
       </div>
 
       {isFav && (
         <div className="fanart-fav-indicator">
           <Star size={11} fill="#fff" />
         </div>
-      )}
-
-      {langCode && (
-        <div className="fanart-lang-badge">{langCode}</div>
       )}
 
       <div className="fanart-overlay">
