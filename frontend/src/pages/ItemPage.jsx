@@ -213,9 +213,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   if (!item) return <div className="empty-state" style={{ flex: 1 }}><h3>Item not found</h3></div>
 
   // Derive available types from current data
-  const availableTypes = ART_TYPES.filter(t =>
-    t === 'all' || fanartData.grouped[t]?.length > 0
-  )
+  const availableTypes = ART_TYPES
 
   // Sources enabled in settings (API key configured / toggle on)
   const ALL_SOURCES_BY_TYPE = {
