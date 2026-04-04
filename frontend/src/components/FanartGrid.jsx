@@ -191,9 +191,11 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
         />
       )}
 
-      <span className={`fanart-source-chip source-${art.source.replace('.', '-')} fanart-chip-tl`}>{srcLabel}</span>
-      {res && <span className="fanart-res-chip fanart-chip-bl">{res}</span>}
-      {langCode && <span className="fanart-lang-chip fanart-chip-br">{langCode}</span>}
+      <div className="fanart-meta-strip">
+        <span className={`fanart-source-chip source-${art.source.replace('.', '-')}`}>{srcLabel}</span>
+        {langCode && <span className="fanart-lang-chip">{langCode}</span>}
+        {res && <span className="fanart-res-chip fanart-res-right">{res}</span>}
+      </div>
 
       {isFav && (
         <div className="fanart-fav-indicator">
