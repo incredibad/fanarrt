@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
@@ -332,11 +332,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                 </span>
               </span>
               <div style={{ display: 'flex', gap: 8 }}>
-                {selectedId && (
-                  <Link to={`/item/${selectedId}`} className="btn btn-ghost btn-sm">
-                    View All Fanart
-                  </Link>
-                )}
                 {displayedFavs.length > 0 && (
                   <button
                     className="btn btn-secondary btn-sm"
