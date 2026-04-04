@@ -42,6 +42,50 @@ function ConnectionStatus({ status }) {
   return <span className="status-dot fail" title={status.error} />
 }
 
+function TVDBLogo({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 54" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <path d="M0,5.096C0,1.81 2.964-0.441 6.462,0.073L52.101,6.035C54.153,6.337 55.787,8.547 55.787,10.954L55.787,17.184C51.941,19.761 49.42,24.074 49.42,28.96C49.42,33.892 51.88,38.168 55.787,40.736L55.787,43.476C55.787,45.883 54.153,48.093 52.101,48.395L11.603,53.927C8.104,54.442 5.141,52.19 5.141,48.904L5.141,5.096ZM19.68,10.822L13.661,10.822L13.661,18.706L9.842,18.706L9.842,23.262L13.661,23.262L13.661,32.023C13.485,37.527 15.647,39.992 20.615,40.039L25.251,40.039L25.251,35.483L22.871,35.483C20.175,35.352 19.591,34.563 19.681,31.015L19.681,23.262L27.08,23.262L33.934,40.038L40.403,40.038L49.837,18.706L43.457,18.706L37.348,33.381L31.777,18.706L19.68,18.706L19.68,10.822Z" fill="#6CD591" fillRule="nonzero"/>
+      <path d="M88.61,18.277C92.518,18.277 95.123,19.241 97.1,21.431C98.717,23.183 99.571,25.768 99.571,28.658C99.571,32.863 97.864,36.149 94.764,38.032C92.742,39.259 90.991,39.609 87.037,39.609L77.244,39.609L77.244,10.393L83.264,10.393L83.264,18.277L88.61,18.277ZM83.264,35.054L87.711,35.054C91.26,35.054 93.416,32.688 93.416,28.833C93.416,24.804 91.53,22.832 87.711,22.832L83.264,22.832L83.264,35.054Z" fill="#FFFFFF" fillRule="nonzero"/>
+      <path d="M68.014,10.393L74.034,10.393L74.034,39.609L63.656,39.609C59.434,39.609 57.412,38.996 55.255,37.113C53.054,35.142 51.931,32.338 51.931,28.79C51.931,25.11 53.144,22.307 55.705,20.248C57.322,18.934 59.524,18.277 62.354,18.277L68.014,18.277L68.014,10.393ZM68.014,22.833L63.656,22.833C60.152,22.833 58.041,25.067 58.041,28.79C58.041,32.688 60.197,35.054 63.656,35.054L68.014,35.054L68.014,22.833Z" fill="#FFFFFF" fillRule="nonzero"/>
+    </svg>
+  )
+}
+
+function TMDBLogo({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 185.04 133.4" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <defs>
+        <linearGradient id="tmdb_grad" y1="66.7" x2="185.04" y2="66.7" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#90cea1"/>
+          <stop offset="0.56" stopColor="#3cbec9"/>
+          <stop offset="1" stopColor="#00b3e5"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#tmdb_grad)" d="M51.06,66.7h0A17.67,17.67,0,0,1,68.73,49h-.1A17.67,17.67,0,0,1,86.3,66.7h0A17.67,17.67,0,0,1,68.63,84.37h.1A17.67,17.67,0,0,1,51.06,66.7Zm82.67-31.33h32.9A17.67,17.67,0,0,0,184.3,17.7h0A17.67,17.67,0,0,0,166.63,0h-32.9A17.67,17.67,0,0,0,116.06,17.7h0A17.67,17.67,0,0,0,133.73,35.37Zm-113,98h63.9A17.67,17.67,0,0,0,102.3,115.7h0A17.67,17.67,0,0,0,84.63,98H20.73A17.67,17.67,0,0,0,3.06,115.7h0A17.67,17.67,0,0,0,20.73,133.37Zm83.92-49h6.25L125.5,49h-8.35l-8.9,23.2h-.1L99.4,49H90.5Zm32.45,0h7.8V49h-7.8Zm22.2,0h24.95V77.2H167.1V70h15.35V62.8H167.1V56.2h16.25V49h-24ZM10.1,35.4h7.8V6.9H28V0H0V6.9H10.1ZM39,35.4h7.8V20.1H61.9V35.4h7.8V0H61.9V13.2H46.75V0H39Zm41.25,0h25V28.2H88V21h15.35V13.8H88V7.2h16.25V0h-24Zm-79,49H9V57.25h.1l9,27.15H24l9.3-27.15h.1V84.4h7.8V49H29.45l-8.2,23.1h-.1L13,49H1.2Zm112.09,49H126a24.59,24.59,0,0,0,7.56-1.15,19.52,19.52,0,0,0,6.35-3.37,16.37,16.37,0,0,0,4.37-5.5A16.91,16.91,0,0,0,146,115.8a18.5,18.5,0,0,0-1.68-8.25,15.1,15.1,0,0,0-4.52-5.53A18.55,18.55,0,0,0,133.07,99,33.54,33.54,0,0,0,125,98H113.29Zm7.81-28.2h4.6a17.43,17.43,0,0,1,4.67.62,11.68,11.68,0,0,1,3.88,1.88,9,9,0,0,1,2.62,3.18,9.87,9.87,0,0,1,1,4.52,11.92,11.92,0,0,1-1,5.08,8.69,8.69,0,0,1-2.67,3.34,10.87,10.87,0,0,1-4,1.83,21.57,21.57,0,0,1-5,.55H121.1Zm36.14,28.2h14.5a23.11,23.11,0,0,0,4.73-.5,13.38,13.38,0,0,0,4.27-1.65,9.42,9.42,0,0,0,3.1-3,8.52,8.52,0,0,0,1.2-4.68,9.16,9.16,0,0,0-.55-3.2,7.79,7.79,0,0,0-1.57-2.62,8.38,8.38,0,0,0-2.45-1.85,10,10,0,0,0-3.18-1v-.1a9.28,9.28,0,0,0,4.43-2.82,7.42,7.42,0,0,0,1.67-5,8.34,8.34,0,0,0-1.15-4.65,7.88,7.88,0,0,0-3-2.73,12.9,12.9,0,0,0-4.17-1.3,34.42,34.42,0,0,0-4.63-.32h-13.2Zm7.8-28.8h5.3a10.79,10.79,0,0,1,1.85.17,5.77,5.77,0,0,1,1.7.58,3.33,3.33,0,0,1,1.23,1.13,3.22,3.22,0,0,1,.47,1.82,3.63,3.63,0,0,1-.42,1.8,3.34,3.34,0,0,1-1.13,1.2,4.78,4.78,0,0,1-1.57.65,8.16,8.16,0,0,1-1.78.2H165Zm0,14.15h5.9a15.12,15.12,0,0,1,2.05.15,7.83,7.83,0,0,1,2,.55,4,4,0,0,1,1.58,1.17,3.13,3.13,0,0,1,.62,2,3.71,3.71,0,0,1-.47,1.95,4,4,0,0,1-1.23,1.3,4.78,4.78,0,0,1-1.67.7,8.91,8.91,0,0,1-1.83.2h-7Z"/>
+    </svg>
+  )
+}
+
+function FanartTvLogo({ size = 18 }) {
+  // No official SVG exists; using a branded "F" badge in their orange
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <rect width="40" height="40" rx="7" fill="#ffa800"/>
+      <path fill="white" d="M10 9h20v6H16v5h12v6H16v10h-6z"/>
+    </svg>
+  )
+}
+
+function AniListLogo({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 172 172" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <path fillRule="evenodd" fill="#02a9ff" d="m85 48.7c0 0.1 30.7 88.7 30.8 88.7 15.4 0 32.3 0 32.3 0 4 0 6.2-2.3 6.2-6.3v-13.7c0-4-2.2-6.2-6.2-6.2h-36.8v-70.2c0-4-2.2-6.2-6.2-6.2h-13.7c-4.1 0-6.3 2.2-6.3 6.2 0 0-0.1 7.2-0.1 7.7z"/>
+      <path fillRule="evenodd" fill="#fefefe" d="m80.8 34.8l35.9 102.6h-27.8l-6-17.8h-30.5l-6.1 17.8h-28l36.1-102.6zm-3.8 62.1l-9.5-28.4-8.8 28.4z"/>
+    </svg>
+  )
+}
+
 const TABS = [
   { id: 'servers',   label: 'Media Servers', icon: Server },
   { id: 'providers', label: 'Providers',     icon: Database },
@@ -226,7 +270,7 @@ export default function SettingsPage({ onLogout }) {
           <div className="settings-grid">
             <div className="settings-section">
               <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>🗄️</span> TheTVDB
+                <TVDBLogo /> TheTVDB
               </div>
               <div className="form-field">
                 <label className="form-label">API Key</label>
@@ -245,7 +289,7 @@ export default function SettingsPage({ onLogout }) {
 
             <div className="settings-section">
               <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>🎥</span> The Movie Database (TMDB)
+                <TMDBLogo /> The Movie Database (TMDB)
               </div>
               <div className="form-field">
                 <label className="form-label">API Key (v3)</label>
@@ -262,7 +306,7 @@ export default function SettingsPage({ onLogout }) {
 
             <div className="settings-section">
               <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>🎨</span> Fanart.tv
+                <FanartTvLogo /> Fanart.tv
               </div>
               <div className="form-field">
                 <label className="form-label">API Key</label>
@@ -279,7 +323,7 @@ export default function SettingsPage({ onLogout }) {
 
             <div className="settings-section">
               <div className="settings-section-title">
-                <span style={{ fontSize: 16 }}>🎌</span> AniList
+                <AniListLogo /> AniList
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <div>
