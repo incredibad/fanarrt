@@ -158,9 +158,11 @@ async function downloadFanartIds(fanartIds, label, res) {
   const archive = archiver('zip', { zlib: { level: 5 } });
   archive.pipe(res);
 
-  let counter = 0;
+  const counters = {};
   for (const row of rows) {
-    const filePath = buildFilename(row, row.media_title, ++counter);
+    const key = sanitize(row.media_title);
+    counters[key] = (counters[key] || 0) + 1;
+    const filePath = buildFilename(row, row.media_title, counters[key]);
     await streamImageToArchive(archive, row.url, filePath);
   }
 
