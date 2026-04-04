@@ -279,9 +279,7 @@ export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, a
     return result
   }, [onToggleCollection, activeCollectionId])
 
-  const types = activeType
-    ? [activeType]
-    : TYPE_ORDER.filter(t => grouped[t]?.length > 0)
+  const types = (activeType ? [activeType] : TYPE_ORDER).filter(t => grouped[t]?.length > 0)
 
   if (types.length === 0) {
     return hasContent ? (

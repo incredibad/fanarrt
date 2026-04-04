@@ -447,8 +447,17 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                   {gridFavs.length === 0 ? (
                     <div className="empty-state">
                       <Star size={36} />
-                      <h3>Nothing here</h3>
-                      <p>Select a title or adjust your filters.</p>
+                      {displayedFavs.length > 0 ? (
+                        <>
+                          <h3>No results</h3>
+                          <p>No artwork matches the current filters. Try selecting a broader filter or "All".</p>
+                        </>
+                      ) : (
+                        <>
+                          <h3>Nothing here</h3>
+                          <p>Select a title from the list to view its artwork.</p>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <GroupedFavGrid
