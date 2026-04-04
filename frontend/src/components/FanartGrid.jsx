@@ -157,6 +157,8 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
   const srcLabel = PROVIDER_LABELS[art.source] || art.source.toUpperCase()
   const dims = liveDims || (art.width && art.height ? { w: art.width, h: art.height } : null)
   const res = dims ? resLabel(dims.w, dims.h, art.type) : null
+  const langCode = (art.language && art.language !== 'en' && art.language !== '' && art.language !== '00')
+    ? art.language.toUpperCase() : null
 
   return (
     <div
@@ -195,6 +197,10 @@ function FanartItem({ art, onToggleFav, onToggleCollection, onOpen, collections,
         <div className="fanart-fav-indicator">
           <Star size={11} fill="#fff" />
         </div>
+      )}
+
+      {langCode && (
+        <div className="fanart-lang-badge">{langCode}</div>
       )}
 
       <div className="fanart-overlay">
