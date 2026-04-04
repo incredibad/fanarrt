@@ -88,7 +88,12 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     }
   }, [id, activeCollectionId])
 
-  // Auto-refresh: check if fanart needs fetching on first load
+  // Reset auto-fetch guard whenever the item changes
+  useEffect(() => {
+    didAutoFetch.current = false
+  }, [id])
+
+  // Auto-refresh: on first visit to an item, or after 48 hours
   useEffect(() => {
     loadItem().then(async () => {
       if (didAutoFetch.current) return
@@ -101,8 +106,8 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
             const res = await api.fetchItemFanart(id)
             if (res.fetched > 0) {
               toast(`Auto-fetched ${res.fetched} new artwork items`, 'info')
-              await loadFanart()
             }
+            await loadFanart()
           } catch {}
           setAutoFetching(false)
         }
