@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil } from 'lucide-react'
+import { AlertTriangle, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 
@@ -109,7 +109,10 @@ export default function SettingsPage({ onLogout }) {
   const [radarrInstances, setRadarrInstances] = useState([])
   const [instanceStatus, setInstanceStatus] = useState({})
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [purgeFavsEnabled, setPurgeFavsEnabled] = useState(false)
+  const [purgeLibEnabled, setPurgeLibEnabled] = useState(false)
+  const [confirmPurge, setConfirmPurge] = useState(null) // 'favs' | 'library'
+  const [purging, setPurging] = useState(false)
 
   useEffect(() => {
     api.getSettings()
@@ -135,17 +138,18 @@ export default function SettingsPage({ onLogout }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleSaveProviders = async () => {
-    setSaving(true)
+  const saveSetting = async (key, value) => {
     try {
-      await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder), anilist_enabled: anilistEnabled, anilist_fuzzy_search: anilistFuzzySearch })
-      toast('Settings saved', 'success')
+      await api.saveSettings({ [key]: value })
     } catch (e) {
       toast(e.message, 'error')
-    } finally {
-      setSaving(false)
     }
   }
+
+  const saveFormField = (key) => () => saveSetting(key, form[key])
+
+  const toggleAnilist = (v) => { setAnilistEnabled(v); saveSetting('anilist_enabled', v) }
+  const toggleFuzzy = (v) => { setAnilistFuzzySearch(v); saveSetting('anilist_fuzzy_search', v) }
 
   const moveProvider = (idx, dir) => {
     setProviderOrder(prev => {
@@ -153,8 +157,24 @@ export default function SettingsPage({ onLogout }) {
       const swap = idx + dir
       if (swap < 0 || swap >= next.length) return prev
       ;[next[idx], next[swap]] = [next[swap], next[idx]]
+      saveSetting('provider_order', JSON.stringify(next))
       return next
     })
+  }
+
+  const handlePurge = async (type) => {
+    setConfirmPurge(null)
+    setPurging(true)
+    try {
+      if (type === 'favs') { await api.purgeFavourites(); toast('Favourites and collections cleared', 'success') }
+      else { await api.purgeLibrary(); toast('Library data cleared', 'success') }
+      setPurgeFavsEnabled(false)
+      setPurgeLibEnabled(false)
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setPurging(false)
+    }
   }
 
   const saveInstances = async (arrType, instances) => {
@@ -199,14 +219,6 @@ export default function SettingsPage({ onLogout }) {
           <h1 className="page-title">Settings</h1>
           <p className="page-subtitle">Configure your media server and API connections</p>
         </div>
-        {tab === 'providers' && (
-          <div className="page-actions">
-            <button className="btn btn-primary" onClick={handleSaveProviders} disabled={saving}>
-              <Save size={14} />
-              {saving ? 'Saving…' : 'Save Settings'}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Tab bar */}
@@ -276,7 +288,7 @@ export default function SettingsPage({ onLogout }) {
               </div>
               <div className="form-field">
                 <label className="form-label">API Key</label>
-                <input className="form-input" type="password" value={form.tvdb_api_key} onChange={set('tvdb_api_key')}
+                <input className="form-input" type="password" value={form.tvdb_api_key} onChange={set('tvdb_api_key')} onBlur={saveFormField('tvdb_api_key')}
                   placeholder="Your TheTVDB v4 API key" />
                 <div className="form-hint">
                   Get a free key at <a href="https://www.thetvdb.com/api-information" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-2)' }}>thetvdb.com/api-information</a>
@@ -284,7 +296,7 @@ export default function SettingsPage({ onLogout }) {
               </div>
               <div className="form-field">
                 <label className="form-label">PIN (optional)</label>
-                <input className="form-input" value={form.tvdb_pin} onChange={set('tvdb_pin')}
+                <input className="form-input" value={form.tvdb_pin} onChange={set('tvdb_pin')} onBlur={saveFormField('tvdb_pin')}
                   placeholder="Subscriber PIN if applicable" />
               </div>
             </div>
@@ -295,7 +307,7 @@ export default function SettingsPage({ onLogout }) {
               </div>
               <div className="form-field">
                 <label className="form-label">API Key (v3)</label>
-                <input className="form-input" type="password" value={form.tmdb_api_key} onChange={set('tmdb_api_key')}
+                <input className="form-input" type="password" value={form.tmdb_api_key} onChange={set('tmdb_api_key')} onBlur={saveFormField('tmdb_api_key')}
                   placeholder="Your TMDB API key" />
                 <div className="form-hint">
                   Free key at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-2)' }}>themoviedb.org/settings/api</a>
@@ -312,7 +324,7 @@ export default function SettingsPage({ onLogout }) {
               </div>
               <div className="form-field">
                 <label className="form-label">API Key</label>
-                <input className="form-input" type="password" value={form.fanart_api_key} onChange={set('fanart_api_key')}
+                <input className="form-input" type="password" value={form.fanart_api_key} onChange={set('fanart_api_key')} onBlur={saveFormField('fanart_api_key')}
                   placeholder="Your Fanart.tv API key" />
                 <div className="form-hint">
                   Free personal key at <a href="https://fanart.tv/get-an-api-key/" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-2)' }}>fanart.tv/get-an-api-key</a>
@@ -340,7 +352,7 @@ export default function SettingsPage({ onLogout }) {
                   type="button"
                   role="switch"
                   aria-checked={anilistEnabled}
-                  onClick={() => setAnilistEnabled(v => !v)}
+                  onClick={() => toggleAnilist(!anilistEnabled)}
                   style={{
                     flexShrink: 0, width: 40, height: 22, borderRadius: 11,
                     background: anilistEnabled ? 'var(--accent)' : 'var(--bg-4)',
@@ -368,7 +380,7 @@ export default function SettingsPage({ onLogout }) {
                   type="button"
                   role="switch"
                   aria-checked={anilistFuzzySearch}
-                  onClick={() => setAnilistFuzzySearch(v => !v)}
+                  onClick={() => toggleFuzzy(!anilistFuzzySearch)}
                   style={{
                     flexShrink: 0, width: 40, height: 22, borderRadius: 11,
                     background: anilistFuzzySearch ? 'var(--accent)' : 'var(--bg-4)',
@@ -429,6 +441,84 @@ export default function SettingsPage({ onLogout }) {
               </p>
               <button className="btn btn-danger btn-sm" onClick={onLogout}>
                 <LogOut size={13} /> Sign Out
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-section" style={{ marginTop: 24, maxWidth: '100%', borderColor: 'var(--red)', borderWidth: 1, borderStyle: 'solid' }}>
+            <div className="settings-section-title" style={{ color: 'var(--red)' }}>
+              <AlertTriangle size={14} /> Danger Zone
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Purge favourites */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Purge all favourites and collections</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6, marginBottom: 10 }}>
+                    Permanently deletes every starred item and all collections. A new empty default collection will be recreated. This cannot be undone.
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-2)', cursor: 'pointer', userSelect: 'none' }}>
+                    <input type="checkbox" checked={purgeFavsEnabled} onChange={e => setPurgeFavsEnabled(e.target.checked)} />
+                    I understand this action is irreversible
+                  </label>
+                </div>
+                <button
+                  className="btn btn-danger btn-sm"
+                  style={{ flexShrink: 0, marginTop: 2 }}
+                  disabled={!purgeFavsEnabled || purging}
+                  onClick={() => setConfirmPurge('favs')}
+                >
+                  <Trash2 size={13} /> Purge Favourites
+                </button>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-soft)' }} />
+
+              {/* Purge library */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Purge all library data</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6, marginBottom: 10 }}>
+                    Permanently deletes all media items, fetched fanart, and favourites. Your Sonarr/Radarr connections and API keys are kept. You will need to re-sync your library. This cannot be undone.
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-2)', cursor: 'pointer', userSelect: 'none' }}>
+                    <input type="checkbox" checked={purgeLibEnabled} onChange={e => setPurgeLibEnabled(e.target.checked)} />
+                    I understand this action is irreversible
+                  </label>
+                </div>
+                <button
+                  className="btn btn-danger btn-sm"
+                  style={{ flexShrink: 0, marginTop: 2 }}
+                  disabled={!purgeLibEnabled || purging}
+                  onClick={() => setConfirmPurge('library')}
+                >
+                  <Trash2 size={13} /> Purge Library
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Purge confirmation modal */}
+      {confirmPurge && (
+        <div className="modal-overlay" onClick={() => setConfirmPurge(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <h3 className="modal-title" style={{ color: 'var(--red)' }}>
+              <AlertTriangle size={16} style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-bottom' }} />
+              {confirmPurge === 'favs' ? 'Purge all favourites and collections?' : 'Purge all library data?'}
+            </h3>
+            <p className="modal-body">
+              {confirmPurge === 'favs'
+                ? 'This will permanently delete every starred item and all collections. A new empty default collection will be recreated.'
+                : 'This will permanently delete all media items, fanart, and favourites. You will need to re-sync your library from Sonarr/Radarr.'}
+              {' '}<strong>This cannot be undone.</strong>
+            </p>
+            <div className="modal-actions">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmPurge(null)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={() => handlePurge(confirmPurge)}>
+                Yes, permanently delete
               </button>
             </div>
           </div>

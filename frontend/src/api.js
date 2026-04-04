@@ -32,6 +32,8 @@ export const api = {
     apiFetch('/settings/test-connection', { method: 'POST', body: JSON.stringify({ url, api_key: apiKey }) }),
   testSavedInstance: (arrType, instanceId) =>
     apiFetch(`/settings/test-instance/${arrType}/${instanceId}`, { method: 'POST' }),
+  purgeFavourites: () => apiFetch('/settings/purge/favourites', { method: 'POST' }),
+  purgeLibrary: () => apiFetch('/settings/purge/library', { method: 'POST' }),
 
   // Library
   getLibrary: (params = {}) => {

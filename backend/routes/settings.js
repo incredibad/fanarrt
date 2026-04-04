@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const db = require('../db/database');
 const settings = require('../services/settings');
 const { fetchFromArr, getSonarrInstances, getRadarrInstances } = require('../services/arrSync');
 
@@ -92,6 +93,29 @@ router.post('/test-instance/:arrType/:instanceId', async (req, res) => {
     res.json({ ok: true, version: data.version });
   } catch (e) {
     res.json({ ok: false, error: e.message });
+  }
+});
+
+// POST /api/settings/purge/favourites — wipe all favourites and collections, recreate default
+router.post('/purge/favourites', (req, res) => {
+  try {
+    db.exec('DELETE FROM favourites; DELETE FROM collections;');
+    db.prepare("INSERT INTO collections(name) VALUES('My Favourites')").run();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/settings/purge/library — wipe all media items, fanart, and sources (cascades to favourites)
+router.post('/purge/library', (req, res) => {
+  try {
+    db.exec('DELETE FROM media_items;');
+    const colCount = db.prepare('SELECT COUNT(*) as c FROM collections').get().c;
+    if (colCount === 0) db.prepare("INSERT INTO collections(name) VALUES('My Favourites')").run();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
