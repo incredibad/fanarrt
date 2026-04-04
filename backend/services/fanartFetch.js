@@ -246,12 +246,15 @@ async function fetchAniListByTvdbVerified(tvdbId, title, mediaItemId) {
     { search: title }
   );
   const media = json.data?.Media;
+  console.log(`[AniList] search "${title}" → media=${!!media}, links=${JSON.stringify(media?.externalLinks?.map(l=>({site:l.site,url:l.url})))}`);
   if (!media) return 0;
 
   const tvdbLink = media.externalLinks?.find(l => l.site === 'Thetvdb' || l.url?.includes('thetvdb.com'));
+  console.log(`[AniList] tvdbLink=${JSON.stringify(tvdbLink)}, our tvdb_id=${tvdbId}`);
   if (!tvdbLink) return 0;
   const tvdbIdFromLink = tvdbLink.url?.match(/(\d+)/)?.[1];
-  if (tvdbIdFromLink !== String(tvdbId)) return 0; // TVDB ID mismatch — skip
+  console.log(`[AniList] tvdbIdFromLink=${tvdbIdFromLink}, match=${tvdbIdFromLink === String(tvdbId)}`);
+  if (tvdbIdFromLink !== String(tvdbId)) return 0;
 
   return insertAniListFanart(media, `tvdb_${tvdbId}`, mediaItemId);
 }
@@ -299,7 +302,9 @@ async function fetchFanartForItem(item) {
           const malId = malRemote ? String(malRemote.id) : null;
           total += await fetchAniListFanart(item.tvdb_id, malId, item.title, item.id);
         }
-      } catch {}
+      } catch (e) {
+        console.error(`[AniList] TVDB extended failed for "${item.title}":`, e.message);
+      }
     }
 
     if (tmdbId) total += await fetchTmdbFanartShow(tmdbId, item.id);
