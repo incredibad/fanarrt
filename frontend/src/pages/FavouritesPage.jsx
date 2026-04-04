@@ -9,6 +9,12 @@ import { CollectionPicker } from '../components/FanartGrid'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'FTV' }
 
+const RES_TIERS = [
+  { id: 'hd',  label: 'HD+',  min: 1280 },
+  { id: 'fhd', label: 'FHD+', min: 1920 },
+  { id: '4k',  label: '4K',   min: 3840 },
+]
+
 export default function FavouritesPage({ onFavCountChange, activeCollection, activeCollectionId, collections = [], onCollectionRename, onCollectionDelete }) {
   const navigate = useNavigate()
 
@@ -21,6 +27,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   const [selectedId, setSelectedId] = useState(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [resFilter, setResFilter] = useState('all')
 
   // ⋮ menu state
   const [menuOpen, setMenuOpen] = useState(false)
@@ -54,6 +61,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     if (!activeCollectionId) return
     setLoading(true)
     setSelectedId(null)
+    setResFilter('all')
     Promise.all([
       api.getFavouriteStats(activeCollectionId),
       api.getFavourites({ collection_id: activeCollectionId }),
@@ -81,9 +89,18 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       if (selectedId && f.media_item_id !== selectedId) return false
       if (typeFilter !== 'all' && f.media_type !== typeFilter) return false
       if (search && !f.media_title.toLowerCase().includes(search.toLowerCase())) return false
+      if (resFilter !== 'all') {
+        const long = Math.max(f.width || 0, f.height || 0)
+        const min = RES_TIERS.find(t => t.id === resFilter).min
+        if (long < min) return false
+      }
       return true
     })
-  }, [allFavs, selectedId, typeFilter, search])
+  }, [allFavs, selectedId, typeFilter, search, resFilter])
+
+  const favResTiers = useMemo(() =>
+    RES_TIERS.filter(t => allFavs.some(f => Math.max(f.width || 0, f.height || 0) >= t.min))
+  , [allFavs])
 
   const handleRemove = async (fav) => {
     try {
@@ -332,6 +349,20 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                 )}
               </div>
             </div>
+
+            {favResTiers.length > 0 && (
+              <div style={{ padding: '6px 20px 8px', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 4, flexShrink: 0, flexWrap: 'wrap' }}>
+                <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setResFilter('all')}>All</button>
+                {favResTiers.map(tier => (
+                  <button key={tier.id}
+                    className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                    onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                    title={`Show only ${tier.label} and above`}
+                  >{tier.label}</button>
+                ))}
+              </div>
+            )}
 
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
               {displayedFavs.length === 0 ? (

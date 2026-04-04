@@ -50,6 +50,12 @@ function providerLinks(item) {
 
 const ART_TYPES = ['all', ...TYPE_ORDER]
 
+const RES_TIERS = [
+  { id: 'hd',  label: 'HD+',  min: 1280 },
+  { id: 'fhd', label: 'FHD+', min: 1920 },
+  { id: '4k',  label: '4K',   min: 3840 },
+]
+
 export default function ItemPage({ onFavCountChange, activeCollectionId, collections = [] }) {
   const { id } = useParams()
   const location = useLocation()
@@ -61,6 +67,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   const [autoFetching, setAutoFetching] = useState(false)
   const [activeType, setActiveType] = useState('all')
   const [activeSource, setActiveSource] = useState('all') // provider filter
+  const [resFilter, setResFilter] = useState('all')
   const [imgError, setImgError] = useState(false)
   const [favCount, setFavCount] = useState(0)
   const didAutoFetch = useRef(false)
@@ -188,20 +195,27 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   if (loading) return <div className="loading-overlay" style={{ flex: 1 }}><div className="spinner" />Loading…</div>
   if (!item) return <div className="empty-state" style={{ flex: 1 }}><h3>Item not found</h3></div>
 
-  // Derive available types and sources from current data
+  // Derive available types, sources, and resolution tiers from current data
   const allSources = [...new Set(fanartData.fanart?.map(f => f.source) || [])]
   const availableTypes = ART_TYPES.filter(t =>
     t === 'all' || fanartData.grouped[t]?.length > 0
   )
+  const availableResTiers = RES_TIERS.filter(t =>
+    (fanartData.fanart || []).some(f => Math.max(f.width || 0, f.height || 0) >= t.min)
+  )
 
-  // Apply source filter to grouped data
+  // Apply source + resolution filter to grouped data
   const filteredGrouped = {}
   const baseGrouped = activeType === 'all'
     ? fanartData.grouped
     : { [activeType]: fanartData.grouped[activeType] || [] }
 
   for (const [type, arts] of Object.entries(baseGrouped)) {
-    const filtered = activeSource === 'all' ? arts : arts.filter(a => a.source === activeSource)
+    let filtered = activeSource === 'all' ? arts : arts.filter(a => a.source === activeSource)
+    if (resFilter !== 'all') {
+      const minPx = RES_TIERS.find(t => t.id === resFilter).min
+      filtered = filtered.filter(a => Math.max(a.width || 0, a.height || 0) >= minPx)
+    }
     if (filtered.length > 0) filteredGrouped[type] = filtered
   }
 
@@ -296,43 +310,60 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
         </div>
       </div>
 
-      {/* Type + provider filter bar */}
+      {/* Type + provider + resolution filter bar */}
       {fanartData.total > 0 && (
         <div className="type-filter-bar">
-          {/* Art type tabs */}
-          <div className="type-filter-tabs">
-            {availableTypes.map(t => (
-              <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
-                onClick={() => setActiveType(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-                {t !== 'all' && fanartData.grouped[t] && (
-                  <span style={{ marginLeft:5, fontSize:11, opacity:0.6 }}>
-                    {fanartData.grouped[t].length}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="type-filter-row">
+            {/* Art type tabs */}
+            <div className="type-filter-tabs">
+              {availableTypes.map(t => (
+                <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
+                  onClick={() => setActiveType(t)}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                  {t !== 'all' && fanartData.grouped[t] && (
+                    <span style={{ marginLeft:5, fontSize:11, opacity:0.6 }}>
+                      {fanartData.grouped[t].length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Provider filter chips */}
+            {allSources.length > 1 && (
+              <div className="type-provider-chips">
+                <button
+                  className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
+                  onClick={() => setActiveSource('all')}
+                  style={{ cursor:'pointer', border:'none', fontSize:10 }}
+                >
+                  All
+                </button>
+                {allSources.map(src => (
+                  <button key={src}
+                    className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
+                    onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
+                    style={{ cursor:'pointer', border:'none', fontSize:10 }}
+                    title={`Show only ${PROVIDER_LABELS[src] || src}`}
+                  >
+                    {PROVIDER_LABELS[src] || src} {fanartData.fanart?.filter(f => f.source === src).length}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Provider filter chips — clickable to filter */}
-          {allSources.length > 1 && (
-            <div className="type-provider-chips">
-              <button
-                className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
-                onClick={() => setActiveSource('all')}
-                style={{ cursor:'pointer', border:'none', fontSize:10 }}
-              >
-                All
-              </button>
-              {allSources.map(src => (
-                <button key={src}
-                  className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
-                  onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
-                  style={{ cursor:'pointer', border:'none', fontSize:10 }}
-                  title={`Show only ${PROVIDER_LABELS[src] || src}`}
-                >
-                  {PROVIDER_LABELS[src] || src} {fanartData.fanart?.filter(f => f.source === src).length}
-                </button>
+          {/* Resolution filter chips */}
+          {availableResTiers.length > 0 && (
+            <div className="type-res-chips">
+              <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setResFilter('all')}>All</button>
+              {availableResTiers.map(tier => (
+                <button key={tier.id}
+                  className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                  onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                  title={`Show only ${tier.label} and above`}
+                >{tier.label}</button>
               ))}
             </div>
           )}

@@ -764,13 +764,19 @@ body {
 
 /* Type filter bar (fanart types) */
 .type-filter-bar {
-  padding: 16px 32px 8px;
+  padding: 12px 32px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 20px;
+}
+
+.type-filter-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--border-soft);
-  margin-bottom: 20px;
 }
 
 .type-filter-tabs {
@@ -787,6 +793,28 @@ body {
   margin-left: auto;
   flex-shrink: 0;
 }
+
+.type-res-chips {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-bottom: 2px;
+}
+
+.res-chip {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--bg-3);
+  color: var(--text-3);
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+.res-chip:hover { background: var(--bg-4); color: var(--text-2); }
+.res-chip.active { background: var(--bg-4); color: var(--text); }
 
 /* Toasts */
 .toast-container {
@@ -1173,9 +1201,11 @@ body {
   .item-hero-actions { margin-top: 10px; }
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
-  .type-filter-bar { flex-direction: column; align-items: stretch; padding: 0 16px; gap: 0; }
+  .type-filter-bar { padding: 0 16px; gap: 0; }
+  .type-filter-row { flex-direction: column; align-items: stretch; }
   .type-filter-tabs { flex: unset; justify-content: center; padding: 10px 0; }
   .type-provider-chips { margin-left: 0 !important; justify-content: center; padding: 10px 0; border-top: 1px solid var(--border-soft); }
+  .type-res-chips { justify-content: center; padding: 8px 0; border-top: 1px solid var(--border-soft); }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
