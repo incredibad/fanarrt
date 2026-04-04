@@ -351,8 +351,8 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                 onClick={() => setActiveType(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
                 {t !== 'all' && fanartData.grouped[t] && (
-                  <span style={{ marginLeft:5, fontSize:11, opacity:0.6 }}>
-                    {fanartData.grouped[t].length}
+                  <span style={{ marginLeft:4, opacity:0.6 }}>
+                    ({fanartData.grouped[t].length})
                   </span>
                 )}
               </button>

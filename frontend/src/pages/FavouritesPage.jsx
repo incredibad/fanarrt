@@ -369,19 +369,33 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
             ) : (
               <>
                 <div className="type-filter-bar">
-                  {/* Row 1: Art type tabs */}
-                  <div className="type-filter-tabs">
-                    {availableArtTypes.map(t => (
-                      <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
-                        onClick={() => setArtTypeFilter(t)}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                        {t !== 'all' && (
-                          <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
-                            {displayedFavs.filter(f => f.type === t).length}
-                          </span>
-                        )}
+                  {/* Row 1: Art type tabs + Download View */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="type-filter-tabs" style={{ flex: 1 }}>
+                      {availableArtTypes.map(t => (
+                        <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
+                          onClick={() => setArtTypeFilter(t)}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                          {t !== 'all' && (
+                            <span style={{ marginLeft: 4, opacity: 0.6 }}>
+                              ({displayedFavs.filter(f => f.type === t).length})
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    {displayedFavs.length > 0 && (
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ flexShrink: 0 }}
+                        onClick={handleDownloadView}
+                        disabled={downloadingView}
+                        title="Download everything currently visible"
+                      >
+                        <Download size={13} />
+                        {downloadingView ? 'Zipping…' : 'Download View'}
                       </button>
-                    ))}
+                    )}
                   </div>
 
                   {/* Row 2: Provider + resolution chips + download */}
@@ -422,21 +436,6 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                       ))}
                     </div>
 
-                    {displayedFavs.length > 0 && (
-                      <>
-                        <div className="filter-chip-divider" />
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          style={{ flexShrink: 0 }}
-                          onClick={handleDownloadView}
-                          disabled={downloadingView}
-                          title="Download everything currently visible"
-                        >
-                          <Download size={13} />
-                          {downloadingView ? 'Zipping…' : 'Download View'}
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
 

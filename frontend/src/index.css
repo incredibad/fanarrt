@@ -787,9 +787,32 @@ body {
 
 .type-filter-tabs {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.type-filter-tabs .filter-tab {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--bg-3);
+  color: var(--text-3);
+  font-family: inherit;
+}
+
+.type-filter-tabs .filter-tab.active {
+  background: var(--bg-4);
+  color: var(--text);
+  outline: 2px solid rgba(255,255,255,0.9);
+  outline-offset: 1px;
+}
+
+.type-filter-tabs .filter-tab:hover:not(.active) {
+  background: var(--bg-4);
+  color: var(--text-2);
 }
 
 /* Second row: provider + divider + resolution chips */
