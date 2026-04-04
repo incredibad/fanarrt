@@ -370,20 +370,18 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               <>
                 <div className="type-filter-bar">
                   {/* Row 1: Art type tabs */}
-                  <div className="type-filter-row">
-                    <div className="type-filter-tabs">
-                      {availableArtTypes.map(t => (
-                        <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
-                          onClick={() => setArtTypeFilter(t)}>
-                          {t.charAt(0).toUpperCase() + t.slice(1)}
-                          {t !== 'all' && (
-                            <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
-                              {displayedFavs.filter(f => f.type === t).length}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="type-filter-tabs">
+                    {availableArtTypes.map(t => (
+                      <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
+                        onClick={() => setArtTypeFilter(t)}>
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                        {t !== 'all' && (
+                          <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
+                            {displayedFavs.filter(f => f.type === t).length}
+                          </span>
+                        )}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Row 2: Provider + resolution chips + download */}
