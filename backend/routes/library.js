@@ -85,6 +85,10 @@ router.get('/:id/fanart', (req, res) => {
   const savedOrder = settings.get('provider_order');
   if (Array.isArray(savedOrder) && savedOrder.length) providerOrder = savedOrder;
 
+  if (settings.get('anilist_enabled') === false) {
+    where += " AND f.source != 'anilist'";
+  }
+
   const fanart = db.prepare(`
     SELECT f.*,
       fav_active.id as favourite_id,
