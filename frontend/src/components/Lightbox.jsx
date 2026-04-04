@@ -4,17 +4,25 @@ import { api } from '../api'
 
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv' }
 
+const langNames = new Intl.DisplayNames(['en'], { type: 'language' })
+
+function langLabel(code) {
+  if (!code) return null
+  try {
+    const name = langNames.of(code)
+    return name ? `Language: ${name} (${code.toUpperCase()})` : `Language: ${code.toUpperCase()}`
+  } catch {
+    return `Language: ${code.toUpperCase()}`
+  }
+}
+
 function resLabel(width, height, type) {
   if (!width || !height) return null
-  const isPortrait = type === 'poster'
-  if (isPortrait) {
-    if (height >= 2160) return '4K'
-    return null  // just show raw pixels for posters
+  if (type === 'background' || type === 'banner') {
+    if ((width === 3840 && height === 2160) || (width === 2160 && height === 3840)) return '4K'
+    if ((width === 1920 && height === 1080) || (width === 1080 && height === 1920)) return 'FHD'
+    if ((width === 1280 && height === 720)  || (width === 720  && height === 1280))  return 'HD'
   }
-  const long = Math.max(width, height)
-  if (long >= 3840) return '4K'
-  if (long >= 1920) return 'FHD'
-  if (long >= 1280) return 'HD'
   return null
 }
 
@@ -196,7 +204,7 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav, col
           : null
         }
         {image.language && image.language !== 'en' && image.language !== '' && (
-          <span className="fanart-meta-chip">{image.language}</span>
+          <span className="fanart-meta-chip">{langLabel(image.language)}</span>
         )}
       </div>
     </div>
