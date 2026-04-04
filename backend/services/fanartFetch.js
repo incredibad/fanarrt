@@ -197,47 +197,71 @@ async function fetchFanartTvMovie(tmdbId, mediaItemId) {
 }
 
 // ─── AniList ──────────────────────────────────────────────────────────────────
-// Only called with a confirmed MAL ID from TVDB remoteIds — never a title search.
 
-async function fetchAniListFanart(malId, mediaItemId) {
+async function anilistQuery(query, variables) {
+  const res = await fetch('https://graphql.anilist.co', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ query, variables }),
+  });
+  if (!res.ok) throw new Error(`AniList HTTP ${res.status}`);
+  return res.json();
+}
+
+function insertAniListFanart(media, prefix, mediaItemId) {
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO fanart(media_item_id, source, source_id, type, url, thumbnail_url, width, height, language, likes)
+    VALUES(?,?,?,?,?,?,?,?,?,?)
+  `);
+  let count = 0;
+  if (media.coverImage?.extraLarge) {
+    stmt.run(mediaItemId, 'anilist', `${prefix}_cover`, 'poster',
+      media.coverImage.extraLarge, media.coverImage.large || media.coverImage.extraLarge,
+      null, null, null, 0);
+    count++;
+  }
+  if (media.bannerImage) {
+    stmt.run(mediaItemId, 'anilist', `${prefix}_banner`, 'banner',
+      media.bannerImage, media.bannerImage, null, null, null, 0);
+    count++;
+  }
+  return count;
+}
+
+// Strategy 1: direct lookup by MAL ID (confirmed via TVDB remoteIds)
+async function fetchAniListByMalId(malId, mediaItemId) {
+  const json = await anilistQuery(
+    `query($idMal:Int){Media(idMal:$idMal,type:ANIME){coverImage{extraLarge large}bannerImage}}`,
+    { idMal: parseInt(malId) }
+  );
+  const media = json.data?.Media;
+  if (!media) return 0;
+  return insertAniListFanart(media, `mal_${malId}`, mediaItemId);
+}
+
+// Strategy 2: title search, accepted only if AniList's own TVDB external link matches our tvdb_id
+async function fetchAniListByTvdbVerified(tvdbId, title, mediaItemId) {
+  const json = await anilistQuery(
+    `query($search:String){Media(search:$search,type:ANIME){coverImage{extraLarge large}bannerImage externalLinks{site url}}}`,
+    { search: title }
+  );
+  const media = json.data?.Media;
+  if (!media) return 0;
+
+  const tvdbLink = media.externalLinks?.find(l => l.site === 'Thetvdb' || l.url?.includes('thetvdb.com'));
+  if (!tvdbLink) return 0;
+  const tvdbIdFromLink = tvdbLink.url?.match(/(\d+)/)?.[1];
+  if (tvdbIdFromLink !== String(tvdbId)) return 0; // TVDB ID mismatch — skip
+
+  return insertAniListFanart(media, `tvdb_${tvdbId}`, mediaItemId);
+}
+
+async function fetchAniListFanart(tvdbId, malId, title, mediaItemId) {
   try {
-    const query = `query ($idMal: Int) {
-      Media(idMal: $idMal, type: ANIME) {
-        coverImage { extraLarge large }
-        bannerImage
-      }
-    }`;
-    const res = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ query, variables: { idMal: parseInt(malId) } }),
-    });
-    if (!res.ok) throw new Error(`AniList HTTP ${res.status}`);
-    const json = await res.json();
-    const media = json.data?.Media;
-    if (!media) return 0;
-
-    const stmt = db.prepare(`
-      INSERT OR IGNORE INTO fanart(media_item_id, source, source_id, type, url, thumbnail_url, width, height, language, likes)
-      VALUES(?,?,?,?,?,?,?,?,?,?)
-    `);
-    const prefix = `mal_${malId}`;
-    let count = 0;
-
-    if (media.coverImage?.extraLarge) {
-      stmt.run(mediaItemId, 'anilist', `${prefix}_cover`, 'poster',
-        media.coverImage.extraLarge, media.coverImage.large || media.coverImage.extraLarge,
-        null, null, null, 0);
-      count++;
-    }
-    if (media.bannerImage) {
-      stmt.run(mediaItemId, 'anilist', `${prefix}_banner`, 'banner',
-        media.bannerImage, media.bannerImage, null, null, null, 0);
-      count++;
-    }
-    return count;
+    if (malId) return await fetchAniListByMalId(malId, mediaItemId);
+    return await fetchAniListByTvdbVerified(tvdbId, title, mediaItemId);
   } catch (e) {
-    console.error(`AniList fanart error for MAL ${malId}:`, e.message);
+    console.error(`AniList fanart error for "${title}":`, e.message);
     return 0;
   }
 }
@@ -269,10 +293,11 @@ async function fetchFanartForItem(item) {
           }
         }
 
-        // AniList: only when MAL ID is confirmed via TVDB remoteIds — no fuzzy search
+        // AniList: MAL ID if available, otherwise title search verified against TVDB ID
         if (item.type === 'anime' && settings.get('anilist_enabled') !== false) {
           const malRemote = remoteIds.find(r => r.sourceName === 'MyAnimeList');
-          if (malRemote) total += await fetchAniListFanart(String(malRemote.id), item.id);
+          const malId = malRemote ? String(malRemote.id) : null;
+          total += await fetchAniListFanart(item.tvdb_id, malId, item.title, item.id);
         }
       } catch {}
     }
@@ -287,4 +312,4 @@ async function fetchFanartForItem(item) {
   return total;
 }
 
-module.exports = { fetchFanartForItem, fetchAniListFanart, fetchTvdbFanart, fetchTmdbFanartMovie, fetchTmdbFanartShow, fetchFanartTvShow, fetchFanartTvMovie };
+module.exports = { fetchFanartForItem, fetchTvdbFanart, fetchTmdbFanartMovie, fetchTmdbFanartShow, fetchFanartTvShow, fetchFanartTvMovie };
