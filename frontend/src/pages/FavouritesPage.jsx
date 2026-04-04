@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown, ExternalLink } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import Lightbox from '../components/Lightbox'
@@ -301,10 +301,10 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                       No titles match
                     </div>
                   ) : filteredStats.map(s => (
-                    <button
+                    <div
                       key={s.id}
                       className={`nav-item ${selectedId === s.id ? 'active' : ''}`}
-                      style={{ margin: '1px 8px', width: 'calc(100% - 16px)' }}
+                      style={{ margin: '1px 8px', width: 'calc(100% - 16px)', cursor: 'pointer' }}
                       onClick={() => setSelectedId(s.id === selectedId ? null : s.id)}
                     >
                       {s.type === 'show' ? <Tv size={13} style={{ flexShrink: 0 }} /> : <Film size={13} style={{ flexShrink: 0 }} />}
@@ -312,7 +312,15 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                         {s.title}
                       </span>
                       <span className="nav-badge">{s.count}</span>
-                    </button>
+                      <Link
+                        to={`/item/${s.id}`}
+                        onClick={e => e.stopPropagation()}
+                        title={`Go to ${s.title}`}
+                        style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center' }}
+                      >
+                        <ExternalLink size={11} />
+                      </Link>
+                    </div>
                   ))}
                 </div>
               </>
