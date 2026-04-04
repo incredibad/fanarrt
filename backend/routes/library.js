@@ -157,8 +157,12 @@ router.get('/:id/needs-refresh', (req, res) => {
   const item = db.prepare('SELECT fanart_fetched_at FROM media_items WHERE id=?').get(req.params.id);
   if (!item) return res.status(404).json({ error: 'Not found' });
 
+  const fanartCount = db.prepare('SELECT COUNT(*) as c FROM fanart WHERE media_item_id=?').get(req.params.id).c;
+
   let needsRefresh = true;
-  if (item.fanart_fetched_at) {
+  if (fanartCount === 0) {
+    needsRefresh = true; // always fetch if there's nothing, regardless of timestamp
+  } else if (item.fanart_fetched_at) {
     const fetchedAt = new Date(item.fanart_fetched_at + 'Z').getTime();
     const hoursSince = (Date.now() - fetchedAt) / (1000 * 60 * 60);
     needsRefresh = hoursSince >= 48;
