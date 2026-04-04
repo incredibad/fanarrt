@@ -316,9 +316,10 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                         to={`/item/${s.id}`}
                         onClick={e => e.stopPropagation()}
                         title={`Go to ${s.title}`}
-                        style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center' }}
+                        style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4 }}
+                        className="favs-item-link"
                       >
-                        <ExternalLink size={11} />
+                        <ExternalLink size={13} />
                       </Link>
                     </div>
                   ))}
