@@ -218,17 +218,24 @@ router.get('/:id/debug-anilist', async (req, res) => {
     const malRemote = remoteIds.find(r => r.sourceName === 'MyAnimeList');
     result.malId = malRemote ? String(malRemote.id) : null;
 
-    if (malRemote) {
-      const alRes = await fetch('https://graphql.anilist.co', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          query: `query($idMal:Int){Media(idMal:$idMal,type:ANIME){id coverImage{extraLarge} bannerImage}}`,
-          variables: { idMal: parseInt(malRemote.id) },
-        }),
-      });
-      const alJson = await alRes.json();
-      result.anilist = alJson.data?.Media || alJson;
+    // Try AniList title search + TVDB ID verification
+    const alRes = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        query: `query($search:String){Media(search:$search,type:ANIME){id idMal title{romaji english}coverImage{extraLarge large}bannerImage externalLinks{site url}}}`,
+        variables: { search: item.title },
+      }),
+    });
+    const alJson = await alRes.json();
+    const media = alJson.data?.Media;
+    result.anilistRaw = media || alJson;
+    if (media?.externalLinks) {
+      const tvdbLink = media.externalLinks.find(l => l.site === 'Thetvdb' || l.url?.includes('thetvdb.com'));
+      result.anilistTvdbLink = tvdbLink || null;
+      const tvdbIdFromAniList = tvdbLink?.url?.match(/(\d+)/)?.[1];
+      result.tvdbIdFromAniList = tvdbIdFromAniList || null;
+      result.tvdbIdMatches = tvdbIdFromAniList === String(item.tvdb_id);
     }
   } catch (e) {
     result.error = e.message;
