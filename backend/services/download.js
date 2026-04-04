@@ -172,4 +172,27 @@ async function downloadFanartIds(fanartIds, label, res) {
   await archive.finalize();
 }
 
-module.exports = { downloadItemFavourites, downloadAllFavourites, downloadTypeFavourites, downloadFanartIds };
+// Stream a zip of ALL fanart for a single media item to res
+async function downloadItemAll(mediaItemId, res) {
+  const item = db.prepare('SELECT * FROM media_items WHERE id=?').get(mediaItemId);
+  if (!item) throw new Error('Media item not found');
+
+  const rows = db.prepare('SELECT * FROM fanart WHERE media_item_id=? ORDER BY type, id').all(mediaItemId);
+
+  const zipName = `${sanitize(item.title)}.zip`;
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
+
+  const archive = archiver('zip', { zlib: { level: 5 } });
+  archive.pipe(res);
+
+  const counts = {};
+  for (const row of rows) {
+    const filePath = buildFilename(row, item.title, counts);
+    await streamImageToArchive(archive, row.url, filePath);
+  }
+
+  await archive.finalize();
+}
+
+module.exports = { downloadItemFavourites, downloadAllFavourites, downloadTypeFavourites, downloadFanartIds, downloadItemAll };
