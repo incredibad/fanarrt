@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/database');
 const { syncSonarr, syncRadarr } = require('../services/arrSync');
-const { fetchFanartForItem } = require('../services/fanartFetch');
+const { fetchFanartForItem, fetchAniListFanart } = require('../services/fanartFetch');
 
 // GET /api/library - list all media items
 router.get('/', (req, res) => {
@@ -178,6 +178,63 @@ router.post('/fetch-all-fanart', async (req, res) => {
   }
 
   res.json({ total, errors });
+});
+
+// GET /api/library/:id/debug-anilist — temporary diagnostic endpoint
+router.get('/:id/debug-anilist', async (req, res) => {
+  const item = db.prepare('SELECT * FROM media_items WHERE id=?').get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  const result = { item: { id: item.id, title: item.title, type: item.type, tvdb_id: item.tvdb_id, tmdb_id: item.tmdb_id } };
+
+  if (!item.tvdb_id) return res.json({ ...result, error: 'No tvdb_id — cannot look up remoteIds' });
+
+  try {
+    const { tvdbGet } = require('../services/fanartFetch').__test || {};
+    // Use the internal tvdbGet via a small inline fetch to avoid re-exporting internals
+    const settings = require('../services/settings');
+    const fetch = require('node-fetch');
+
+    // Get TVDB token
+    const apiKey = settings.get('tvdb_api_key');
+    if (!apiKey) return res.json({ ...result, error: 'No tvdb_api_key configured' });
+
+    const loginRes = await fetch('https://api4.thetvdb.com/v4/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apikey: apiKey, pin: settings.get('tvdb_pin') || '' }),
+    });
+    if (!loginRes.ok) return res.json({ ...result, error: `TVDB login failed: ${loginRes.status}` });
+    const { data: { token } } = await loginRes.json();
+
+    const extRes = await fetch(`https://api4.thetvdb.com/v4/series/${item.tvdb_id}/extended`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!extRes.ok) return res.json({ ...result, error: `TVDB extended failed: ${extRes.status}` });
+    const ext = await extRes.json();
+    const remoteIds = ext.data?.remoteIds || [];
+    result.remoteIds = remoteIds.map(r => ({ sourceName: r.sourceName, id: r.id }));
+
+    const malRemote = remoteIds.find(r => r.sourceName === 'MyAnimeList');
+    result.malId = malRemote ? String(malRemote.id) : null;
+
+    if (malRemote) {
+      const alRes = await fetch('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          query: `query($idMal:Int){Media(idMal:$idMal,type:ANIME){id coverImage{extraLarge} bannerImage}}`,
+          variables: { idMal: parseInt(malRemote.id) },
+        }),
+      });
+      const alJson = await alRes.json();
+      result.anilist = alJson.data?.Media || alJson;
+    }
+  } catch (e) {
+    result.error = e.message;
+  }
+
+  res.json(result);
 });
 
 module.exports = router;

@@ -297,4 +297,4 @@ async function fetchFanartForItem(item) {
   return total;
 }
 
-module.exports = { fetchFanartForItem, fetchTvdbFanart, fetchTmdbFanartMovie, fetchTmdbFanartShow, fetchFanartTvShow, fetchFanartTvMovie };
+module.exports = { fetchFanartForItem, fetchAniListFanart, fetchTvdbFanart, fetchTmdbFanartMovie, fetchTmdbFanartShow, fetchFanartTvShow, fetchFanartTvMovie };
