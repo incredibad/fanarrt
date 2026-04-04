@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil } from 'lucide-react'
+import { AlertTriangle, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil, LayoutGrid } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 
@@ -89,9 +89,37 @@ function AniListLogo({ size = 18 }) {
 const TABS = [
   { id: 'servers',   label: 'Media Servers', icon: Server },
   { id: 'providers', label: 'Providers',     icon: Database },
+  { id: 'libraries', label: 'Libraries',     icon: LayoutGrid },
   { id: 'account',   label: 'Account',       icon: User },
   { id: 'system',    label: 'System',        icon: AlertTriangle },
 ]
+
+const ART_TYPE_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'background', label: 'Background' },
+  { value: 'poster',     label: 'Poster' },
+  { value: 'banner',     label: 'Banner' },
+  { value: 'clearlogo',  label: 'Clearlogo' },
+  { value: 'clearart',   label: 'Clearart' },
+  { value: 'disc',       label: 'Disc' },
+  { value: 'characterart', label: 'Character Art' },
+  { value: 'icon',       label: 'Icon' },
+]
+
+const RES_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'hd',  label: 'HD (1280×720)' },
+  { value: 'fhd', label: 'FHD (1920×1080)' },
+  { value: '4k',  label: '4K (3840×2160)' },
+]
+
+const SOURCE_OPTIONS = {
+  show:  [{ value: 'all', label: 'All' }, { value: 'fanart.tv', label: 'Fanart.tv' }, { value: 'tvdb', label: 'TVDB' }, { value: 'tmdb', label: 'TMDB' }],
+  movie: [{ value: 'all', label: 'All' }, { value: 'fanart.tv', label: 'Fanart.tv' }, { value: 'tmdb', label: 'TMDB' }],
+  anime: [{ value: 'all', label: 'All' }, { value: 'fanart.tv', label: 'Fanart.tv' }, { value: 'tvdb', label: 'TVDB' }, { value: 'tmdb', label: 'TMDB' }, { value: 'anilist', label: 'AniList' }],
+}
+
+const DEFAULT_FILTER = { artType: 'all', source: 'all', res: 'all' }
 
 const TYPE_PROVIDER_DEFAULTS = {
   show:  ['fanart.tv', 'tvdb', 'tmdb'],
@@ -115,6 +143,7 @@ export default function SettingsPage({ onLogout }) {
   const [radarrInstances, setRadarrInstances] = useState([])
   const [instanceStatus, setInstanceStatus] = useState({})
   const [loading, setLoading] = useState(true)
+  const [defaultFilters, setDefaultFilters] = useState({ show: { ...DEFAULT_FILTER }, movie: { ...DEFAULT_FILTER }, anime: { ...DEFAULT_FILTER } })
   const [purgeFavsEnabled, setPurgeFavsEnabled] = useState(false)
   const [purgeLibEnabled, setPurgeLibEnabled] = useState(false)
   const [confirmPurge, setConfirmPurge] = useState(null) // 'favs' | 'library'
@@ -137,6 +166,11 @@ export default function SettingsPage({ onLogout }) {
         })
         if (data.anilist_enabled !== undefined) setAnilistEnabled(data.anilist_enabled)
         if (data.anilist_fuzzy_search !== undefined) setAnilistFuzzySearch(data.anilist_fuzzy_search)
+        setDefaultFilters({
+          show:  data.default_filters_show  || { ...DEFAULT_FILTER },
+          movie: data.default_filters_movie || { ...DEFAULT_FILTER },
+          anime: data.default_filters_anime || { ...DEFAULT_FILTER },
+        })
         if (Array.isArray(data.sonarr_instances)) setSonarrInstances(data.sonarr_instances)
         if (Array.isArray(data.radarr_instances)) setRadarrInstances(data.radarr_instances)
       })
@@ -153,6 +187,14 @@ export default function SettingsPage({ onLogout }) {
   }
 
   const saveFormField = (key) => () => saveSetting(key, form[key])
+
+  const saveDefaultFilter = (type, field, value) => {
+    setDefaultFilters(prev => {
+      const next = { ...prev, [type]: { ...prev[type], [field]: value } }
+      saveSetting(`default_filters_${type}`, next[type])
+      return next
+    })
+  }
 
   const toggleAnilist = (v) => { setAnilistEnabled(v); saveSetting('anilist_enabled', v) }
   const toggleFuzzy = (v) => { setAnilistFuzzySearch(v); saveSetting('anilist_fuzzy_search', v) }
@@ -435,6 +477,49 @@ export default function SettingsPage({ onLogout }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Libraries */}
+      {tab === 'libraries' && (
+        <div style={{ padding: '0 32px 32px' }}>
+          <div className="settings-grid">
+            {[
+              { type: 'show',  label: 'TV Shows' },
+              { type: 'movie', label: 'Movies' },
+              { type: 'anime', label: 'Anime' },
+            ].map(({ type, label }) => {
+              const sources = type === 'anime' && !anilistEnabled
+                ? SOURCE_OPTIONS[type].filter(s => s.value !== 'anilist')
+                : SOURCE_OPTIONS[type]
+              const f = defaultFilters[type]
+              const FilterRow = ({ field, title, options }) => (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-2)', marginBottom: 6 }}>{title}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {options.map(opt => (
+                      <button
+                        key={opt.value}
+                        className={`res-chip ${f[field] === opt.value ? 'active' : ''}`}
+                        onClick={() => saveDefaultFilter(type, field, opt.value)}
+                      >{opt.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )
+              return (
+                <div key={type} className="settings-section">
+                  <div className="settings-section-title"><LayoutGrid size={14} /> {label}</div>
+                  <FilterRow field="artType" title="Default art type" options={ART_TYPE_OPTIONS} />
+                  <FilterRow field="source"  title="Default source"   options={sources} />
+                  <FilterRow field="res"     title="Default resolution" options={RES_OPTIONS} />
+                  <div style={{ marginTop: 12, padding: '8px 10px', background: 'var(--bg-3)', borderRadius: 'var(--radius-sm)', fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
+                    If the selected filter doesn't match any artwork for a given item, the page will show an empty state. Change the filter manually or set a broader default.
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

@@ -43,6 +43,7 @@ router.post('/', (req, res) => {
     'tmdb_api_key', 'fanart_api_key',
     'provider_order', 'provider_order_show', 'provider_order_movie', 'provider_order_anime',
     'anilist_enabled', 'anilist_fuzzy_search',
+    'default_filters_show', 'default_filters_movie', 'default_filters_anime',
     'sonarr_instances', 'radarr_instances',
   ];
 

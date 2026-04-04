@@ -85,13 +85,24 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
 
   const loadItem = useCallback(async () => {
     try {
-      const [itemData, fanart] = await Promise.all([
+      const [itemData, fanart, settings] = await Promise.all([
         api.getItem(id),
         api.getItemFanart(id, { collection_id: activeCollectionId }),
+        api.getSettings(),
       ])
       setItem(itemData)
       setFanartData(fanart)
       setFavCount(fanart.fanart.filter(f => f.favourite_id).length)
+      const defaults = settings[`default_filters_${itemData.type}`]
+      if (defaults) {
+        setActiveType(defaults.artType || 'all')
+        setActiveSource(defaults.source || 'all')
+        setResFilter(defaults.res || 'all')
+      } else {
+        setActiveType('all')
+        setActiveSource('all')
+        setResFilter('all')
+      }
     } catch (e) {
       toast(e.message, 'error')
     } finally {
