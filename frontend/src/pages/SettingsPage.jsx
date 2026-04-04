@@ -104,6 +104,7 @@ export default function SettingsPage({ onLogout }) {
   const DEFAULT_ORDER = ['fanart.tv', 'tvdb', 'tmdb', 'anilist']
   const [providerOrder, setProviderOrder] = useState(DEFAULT_ORDER)
   const [anilistEnabled, setAnilistEnabled] = useState(true)
+  const [anilistFuzzySearch, setAnilistFuzzySearch] = useState(false)
   const [sonarrInstances, setSonarrInstances] = useState([])
   const [radarrInstances, setRadarrInstances] = useState([])
   const [instanceStatus, setInstanceStatus] = useState({})
@@ -126,6 +127,7 @@ export default function SettingsPage({ onLogout }) {
           setProviderOrder(order.includes('anilist') ? order : [...order, 'anilist'])
         }
         if (data.anilist_enabled !== undefined) setAnilistEnabled(data.anilist_enabled)
+        if (data.anilist_fuzzy_search !== undefined) setAnilistFuzzySearch(data.anilist_fuzzy_search)
         if (Array.isArray(data.sonarr_instances)) setSonarrInstances(data.sonarr_instances)
         if (Array.isArray(data.radarr_instances)) setRadarrInstances(data.radarr_instances)
       })
@@ -136,7 +138,7 @@ export default function SettingsPage({ onLogout }) {
   const handleSaveProviders = async () => {
     setSaving(true)
     try {
-      await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder), anilist_enabled: anilistEnabled })
+      await api.saveSettings({ ...form, provider_order: JSON.stringify(providerOrder), anilist_enabled: anilistEnabled, anilist_fuzzy_search: anilistFuzzySearch })
       toast('Settings saved', 'success')
     } catch (e) {
       toast(e.message, 'error')
@@ -348,6 +350,34 @@ export default function SettingsPage({ onLogout }) {
                 >
                   <span style={{
                     position: 'absolute', top: 2, left: anilistEnabled ? 20 : 2,
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    transition: 'left 0.2s', display: 'block',
+                  }} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-soft)' }}>
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>
+                    Fuzzy title search fallback
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>
+                    When no MAL ID can be found via TVDB mapping, fall back to searching AniList by title. May return incorrect results for ambiguous titles.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={anilistFuzzySearch}
+                  onClick={() => setAnilistFuzzySearch(v => !v)}
+                  style={{
+                    flexShrink: 0, width: 40, height: 22, borderRadius: 11,
+                    background: anilistFuzzySearch ? 'var(--accent)' : 'var(--bg-4)',
+                    border: '1px solid ' + (anilistFuzzySearch ? 'var(--accent)' : 'var(--border)'),
+                    cursor: 'pointer', position: 'relative', transition: 'background 0.2s, border-color 0.2s',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 2, left: anilistFuzzySearch ? 20 : 2,
                     width: 16, height: 16, borderRadius: '50%', background: '#fff',
                     transition: 'left 0.2s', display: 'block',
                   }} />

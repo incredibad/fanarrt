@@ -283,15 +283,30 @@ async function fetchAniListFanart(tvdbId, malIdFromRemote, title, mediaItemId) {
     // Priority 1: MAL ID from TVDB remoteIds (direct, no external lookup needed)
     // Priority 2: MAL ID from anime-lists TVDB→MAL mapping
     const malId = malIdFromRemote || (tvdbId ? await getMalIdForTvdb(tvdbId) : null);
-    if (!malId) return 0;
 
-    const json = await anilistQuery(
-      `query($idMal:Int){Media(idMal:$idMal,type:ANIME){coverImage{extraLarge large}bannerImage}}`,
-      { idMal: parseInt(malId) }
-    );
-    const media = json.data?.Media;
-    if (!media) return 0;
-    return insertAniListFanart(media, malId, mediaItemId);
+    if (malId) {
+      const json = await anilistQuery(
+        `query($idMal:Int){Media(idMal:$idMal,type:ANIME){coverImage{extraLarge large}bannerImage}}`,
+        { idMal: parseInt(malId) }
+      );
+      const media = json.data?.Media;
+      if (media) return insertAniListFanart(media, malId, mediaItemId);
+    }
+
+    // Priority 3: Fuzzy title search (opt-in, fallback only when ID lookup fails)
+    if (settings.get('anilist_fuzzy_search') === true && title) {
+      const json = await anilistQuery(
+        `query($search:String){Media(search:$search,type:ANIME){id coverImage{extraLarge large}bannerImage}}`,
+        { search: title }
+      );
+      const media = json.data?.Media;
+      if (media) {
+        const syntheticId = `fuzzy_${media.id}`;
+        return insertAniListFanart(media, syntheticId, mediaItemId);
+      }
+    }
+
+    return 0;
   } catch (e) {
     console.error(`AniList fanart error for "${title}":`, e.message);
     return 0;
