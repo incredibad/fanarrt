@@ -148,6 +148,11 @@ body {
   color: var(--accent-2);
 }
 
+.nav-item.collection-active {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
 .nav-item svg { flex-shrink: 0; opacity: 0.8; }
 
 .nav-badge {
