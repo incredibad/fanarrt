@@ -401,7 +401,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                               style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
                               title={`Show only ${PROVIDER_LABELS[src] || src}`}
                             >
-                              {PROVIDER_LABELS[src] || src} {displayedFavs.filter(f => f.source === src).length}
+                              {PROVIDER_LABELS[src] || src} ({displayedFavs.filter(f => f.source === src).length})
                             </button>
                           ))}
                         </div>
