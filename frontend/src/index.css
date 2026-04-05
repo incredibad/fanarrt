@@ -1306,13 +1306,8 @@ body {
   .item-hero-actions { margin-top: 10px; }
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
-  .type-filter-bar { padding: 10px 16px 12px; gap: 8px; }
   .type-filter-tabs { justify-content: flex-start; }
   .type-right-chips { justify-content: flex-start; }
-  .fav-type-row { flex-wrap: wrap; }
-  .fav-download-wrap { order: -1; width: 100%; margin-bottom: 4px; }
-  .fav-download-wrap .btn { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
-  .fav-download-wrap .btn:hover { background: rgba(245,158,11,0.25); }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
@@ -1843,6 +1838,57 @@ body {
   overflow: hidden;
 }
 
+/* ── Favourites accordion (mobile only — hidden on desktop) ──────────────── */
+
+.fav-accordion-header {
+  display: none;
+}
+
+.fav-accordion-chevron {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.fav-accordion-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Desktop: accordion body is always visible and fills available space */
+.favs-sidebar .fav-accordion-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.filters-accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Mobile download button — hidden on desktop */
+.fav-download-mobile {
+  display: none;
+}
+
+/* ── Download View button — yellow everywhere ────────────────────────────── */
+
+.fav-download-btn {
+  background: rgba(245,158,11,0.15);
+  color: #fbbf24;
+  border-color: rgba(251,191,36,0.3);
+}
+.fav-download-btn:hover { background: rgba(245,158,11,0.25); }
+
 .favs-item-link { opacity: 0.5; transition: opacity 0.15s, background 0.15s; }
 .favs-item-link:hover { opacity: 1; background: var(--bg-3); color: var(--accent) !important; }
 
@@ -1854,8 +1900,58 @@ body {
 
 @media (max-width: 768px) {
   .favs-layout { flex-direction: column; overflow-y: auto; }
-  .favs-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border-soft); max-height: 260px; }
+  .favs-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border-soft); overflow: visible; }
   .favs-content { overflow: visible; }
+
+  /* Accordion header */
+  .fav-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .fav-accordion-header:hover { background: var(--bg-3); }
+
+  /* Accordion body: collapsed by default, overrides desktop flex styles */
+  .favs-sidebar .fav-accordion-body,
+  .filters-accordion-body { display: none; flex: none; }
+
+  .favs-sidebar .fav-accordion-body.open {
+    display: flex;
+    flex-direction: column;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .filters-accordion-body.open {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px 12px;
+  }
+
+  /* Filter bar: remove padding/gap/border — accordion header handles it */
+  .type-filter-bar { padding: 0; gap: 0; margin-bottom: 0; border-bottom: none; }
+
+  /* Hide desktop download button on mobile */
+  .fav-download-wrap { display: none; }
+
+  /* Mobile download button: always visible, full width */
+  .fav-download-mobile {
+    display: block;
+    padding: 8px 16px 4px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .fav-download-mobile .fav-download-btn { width: 100%; justify-content: center; }
 }
 
 /* ── Square logo / clearart / disc thumb treatment ───────────────────────── */

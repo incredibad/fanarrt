@@ -45,6 +45,10 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
   // Delete confirmation
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
+  // Mobile accordion state (collapsed by default)
+  const [titlesOpen, setTitlesOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
   // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return
@@ -228,8 +232,9 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
 
           {/* ── Left panel: title list ─────────────────────────────────────── */}
           <div className="favs-sidebar">
+            {/* Always visible: collection name + menu */}
             <div style={{ padding: '10px 10px 8px', borderBottom: '1px solid var(--border-soft)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {renaming ? (
                   <input
                     ref={renameInputRef}
@@ -279,83 +284,92 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                   )}
                 </div>
               </div>
+            </div>
 
+            {/* Mobile accordion header for titles */}
+            {stats.length > 0 && (
+              <button className="fav-accordion-header" onClick={() => setTitlesOpen(o => !o)}>
+                <span>Titles</span>
+                <span className={`fav-accordion-chevron${titlesOpen ? ' open' : ''}`}><ChevronDown size={14} /></span>
+              </button>
+            )}
+
+            {/* Accordion body: search + type tabs + All button + titles list */}
+            <div className={`fav-accordion-body${titlesOpen ? ' open' : ''}`}>
               {stats.length > 0 && (
                 <>
-                  <div className="search-input-wrap" style={{ maxWidth: '100%', marginBottom: 8 }}>
-                    <Search size={13} />
-                    <input
-                      className="search-input"
-                      placeholder="Search titles…"
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      style={{ fontSize: 13 }}
-                    />
-                    {search && (
-                      <button onClick={() => setSearch('')} style={{
-                        position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-                        background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', padding: 2
-                      }}><X size={12} /></button>
-                    )}
+                  <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-soft)' }}>
+                    <div className="search-input-wrap" style={{ maxWidth: '100%', marginBottom: 8 }}>
+                      <Search size={13} />
+                      <input
+                        className="search-input"
+                        placeholder="Search titles…"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        style={{ fontSize: 13 }}
+                      />
+                      {search && (
+                        <button onClick={() => setSearch('')} style={{
+                          position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                          background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', padding: 2
+                        }}><X size={12} /></button>
+                      )}
+                    </div>
+                    <div className="filter-tabs" style={{ padding: 2 }}>
+                      {['all', 'show', 'movie', 'anime'].map(t => (
+                        <button key={t} className={`filter-tab ${typeFilter === t ? 'active' : ''}`}
+                          onClick={() => { setTypeFilter(t); setSelectedId(null) }}
+                          style={{ flex: 1, fontSize: 12, padding: '5px 4px' }}
+                        >
+                          {t === 'all' ? 'All' : t === 'show' ? 'TV' : t === 'movie' ? 'Movies' : 'Anime'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="filter-tabs" style={{ padding: 2 }}>
-                    {['all', 'show', 'movie', 'anime'].map(t => (
-                      <button key={t} className={`filter-tab ${typeFilter === t ? 'active' : ''}`}
-                        onClick={() => { setTypeFilter(t); setSelectedId(null) }}
-                        style={{ flex: 1, fontSize: 12, padding: '5px 4px' }}
+
+                  <button
+                    className={`nav-item ${!selectedId ? 'active' : ''}`}
+                    style={{ margin: '4px 8px 2px', width: 'calc(100% - 16px)' }}
+                    onClick={() => setSelectedId(null)}
+                  >
+                    <Star size={13} />
+                    <span style={{ flex: 1, textAlign: 'left', fontSize: 13 }}>All</span>
+                    <span className="nav-badge">{filteredStats.reduce((a,b) => a+b.count, 0)}</span>
+                  </button>
+
+                  <div style={{ overflowY: 'auto', flex: 1 }}>
+                    {filteredStats.length === 0 ? (
+                      <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
+                        No titles match
+                      </div>
+                    ) : filteredStats.map(s => (
+                      <div
+                        key={s.id}
+                        className={`nav-item ${selectedId === s.id ? 'active' : ''}`}
+                        style={{ margin: '1px 8px', width: 'calc(100% - 16px)', cursor: 'pointer' }}
+                        onClick={() => setSelectedId(s.id === selectedId ? null : s.id)}
                       >
-                        {t === 'all' ? 'All' : t === 'show' ? 'TV' : t === 'movie' ? 'Movies' : 'Anime'}
-                      </button>
+                        {s.type === 'show' ? <Tv size={13} style={{ flexShrink: 0 }} /> : <Film size={13} style={{ flexShrink: 0 }} />}
+                        <span style={{ flex: 1, textAlign: 'left', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.title}
+                        </span>
+                        <span className="nav-badge">{s.count}</span>
+                        <Link
+                          to={`/item/${s.id}`}
+                          state={{ from: s.type === 'movie' ? '/movies' : s.type === 'anime' ? '/anime' : '/shows' }}
+                          onClick={e => e.stopPropagation()}
+                          title={`Go to ${s.title}`}
+                          style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4 }}
+                          className="favs-item-link"
+                        >
+                          <ExternalLink size={13} />
+                        </Link>
+                      </div>
                     ))}
                   </div>
                 </>
               )}
             </div>
-
-            {stats.length > 0 && (
-              <>
-                <button
-                  className={`nav-item ${!selectedId ? 'active' : ''}`}
-                  style={{ margin: '4px 8px 2px', width: 'calc(100% - 16px)' }}
-                  onClick={() => setSelectedId(null)}
-                >
-                  <Star size={13} />
-                  <span style={{ flex: 1, textAlign: 'left', fontSize: 13 }}>All</span>
-                  <span className="nav-badge">{filteredStats.reduce((a,b) => a+b.count, 0)}</span>
-                </button>
-
-                <div style={{ overflowY: 'auto', flex: 1 }}>
-                  {filteredStats.length === 0 ? (
-                    <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
-                      No titles match
-                    </div>
-                  ) : filteredStats.map(s => (
-                    <div
-                      key={s.id}
-                      className={`nav-item ${selectedId === s.id ? 'active' : ''}`}
-                      style={{ margin: '1px 8px', width: 'calc(100% - 16px)', cursor: 'pointer' }}
-                      onClick={() => setSelectedId(s.id === selectedId ? null : s.id)}
-                    >
-                      {s.type === 'show' ? <Tv size={13} style={{ flexShrink: 0 }} /> : <Film size={13} style={{ flexShrink: 0 }} />}
-                      <span style={{ flex: 1, textAlign: 'left', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {s.title}
-                      </span>
-                      <span className="nav-badge">{s.count}</span>
-                      <Link
-                        to={`/item/${s.id}`}
-                        state={{ from: s.type === 'movie' ? '/movies' : s.type === 'anime' ? '/anime' : '/shows' }}
-                        onClick={e => e.stopPropagation()}
-                        title={`Go to ${s.title}`}
-                        style={{ flexShrink: 0, marginLeft: 4, color: 'var(--text-3)', display: 'flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4 }}
-                        className="favs-item-link"
-                      >
-                        <ExternalLink size={13} />
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
 
           {/* ── Right panel: fanart grid ───────────────────────────────────── */}
@@ -369,76 +383,99 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
             ) : (
               <>
                 <div className="type-filter-bar">
-                  {/* Row 1: Art type tabs + Download View */}
-                  <div className="fav-type-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div className="type-filter-tabs" style={{ flex: 1 }}>
-                      {availableArtTypes.map(t => (
-                        <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
-                          onClick={() => setArtTypeFilter(t)}>
-                          {t.charAt(0).toUpperCase() + t.slice(1)}
-                          {t !== 'all' && (
-                            <span style={{ marginLeft: 4, opacity: 0.6 }}>
-                              ({displayedFavs.filter(f => f.type === t).length})
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    {displayedFavs.length > 0 && (
-                      <div className="fav-download-wrap">
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={handleDownloadView}
-                          disabled={downloadingView}
-                          title="Download everything currently visible"
-                        >
-                          <Download size={13} />
-                          {downloadingView ? 'Zipping…' : 'Download View'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {/* Mobile accordion header */}
+                  <button className="fav-accordion-header" onClick={() => setFiltersOpen(o => !o)}>
+                    <span>Filters</span>
+                    <span className={`fav-accordion-chevron${filtersOpen ? ' open' : ''}`}><ChevronDown size={14} /></span>
+                  </button>
 
-                  {/* Row 2: Provider + resolution chips + download */}
-                  <div className="type-right-chips">
-                    {enabledSources.length > 1 && (
-                      <div className="type-provider-chips">
-                        <button
-                          className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
-                          onClick={() => setArtSourceFilter('all')}
-                          style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
-                        >All</button>
-                        {enabledSources.map(src => (
-                          <button key={src}
-                            className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
-                            onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
-                            style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
-                            title={`Show only ${PROVIDER_LABELS[src] || src}`}
-                          >
-                            {PROVIDER_LABELS[src] || src} ({displayedFavs.filter(f => f.source === src).length})
+                  {/* Filter content */}
+                  <div className={`fav-accordion-body filters-accordion-body${filtersOpen ? ' open' : ''}`}>
+                    {/* Row 1: Art type tabs + Download View (desktop) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="type-filter-tabs" style={{ flex: 1 }}>
+                        {availableArtTypes.map(t => (
+                          <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
+                            onClick={() => setArtTypeFilter(t)}>
+                            {t.charAt(0).toUpperCase() + t.slice(1)}
+                            {t !== 'all' && (
+                              <span style={{ marginLeft: 4, opacity: 0.6 }}>
+                                ({displayedFavs.filter(f => f.type === t).length})
+                              </span>
+                            )}
                           </button>
                         ))}
                       </div>
-                    )}
-
-                    {enabledSources.length > 1 && (
-                      <div className="filter-chip-divider" />
-                    )}
-
-                    <div className="type-res-chips">
-                      <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                        onClick={() => setResFilter('all')}>All</button>
-                      {RES_TIERS.map(tier => (
-                        <button key={tier.id}
-                          className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                          onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                          title={`${tier.w}×${tier.h} only`}
-                        >{tier.label}</button>
-                      ))}
+                      {displayedFavs.length > 0 && (
+                        <div className="fav-download-wrap">
+                          <button
+                            className="btn btn-secondary btn-sm fav-download-btn"
+                            onClick={handleDownloadView}
+                            disabled={downloadingView}
+                            title="Download everything currently visible"
+                          >
+                            <Download size={13} />
+                            {downloadingView ? 'Zipping…' : 'Download View'}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
+                    {/* Row 2: Provider + resolution chips */}
+                    <div className="type-right-chips">
+                      {enabledSources.length > 1 && (
+                        <div className="type-provider-chips">
+                          <button
+                            className={`fanart-source-chip source-all ${artSourceFilter === 'all' ? 'source-active' : ''}`}
+                            onClick={() => setArtSourceFilter('all')}
+                            style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
+                          >All</button>
+                          {enabledSources.map(src => (
+                            <button key={src}
+                              className={`fanart-source-chip source-${src.replace('.', '-')} ${artSourceFilter === src ? 'source-active' : ''}`}
+                              onClick={() => setArtSourceFilter(artSourceFilter === src ? 'all' : src)}
+                              style={{ cursor: 'pointer', border: 'none', fontSize: 10 }}
+                              title={`Show only ${PROVIDER_LABELS[src] || src}`}
+                            >
+                              {PROVIDER_LABELS[src] || src} ({displayedFavs.filter(f => f.source === src).length})
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {enabledSources.length > 1 && (
+                        <div className="filter-chip-divider" />
+                      )}
+
+                      <div className="type-res-chips">
+                        <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                          onClick={() => setResFilter('all')}>All</button>
+                        {RES_TIERS.map(tier => (
+                          <button key={tier.id}
+                            className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                            onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                            title={`${tier.w}×${tier.h} only`}
+                          >{tier.label}</button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Mobile-only: Download View below accordions, always visible */}
+                {displayedFavs.length > 0 && (
+                  <div className="fav-download-mobile">
+                    <button
+                      className="btn btn-secondary btn-sm fav-download-btn"
+                      onClick={handleDownloadView}
+                      disabled={downloadingView}
+                      title="Download everything currently visible"
+                    >
+                      <Download size={13} />
+                      {downloadingView ? 'Zipping…' : 'Download View'}
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
                   {gridFavs.length === 0 ? (
