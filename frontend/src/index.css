@@ -1849,7 +1849,9 @@ body {
 }
 
 @media (max-width: 768px) {
+  .favs-layout { flex-direction: column; overflow-y: auto; }
   .favs-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border-soft); max-height: 260px; }
+  .favs-content { overflow: visible; }
 }
 
 /* ── Square logo / clearart / disc thumb treatment ───────────────────────── */

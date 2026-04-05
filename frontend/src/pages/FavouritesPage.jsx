@@ -224,7 +224,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
       {loading ? (
         <div className="loading-overlay"><div className="spinner" />Loading…</div>
       ) : (
-        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div className="favs-layout" style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
 
           {/* ── Left panel: title list ─────────────────────────────────────── */}
           <div className="favs-sidebar">
@@ -359,7 +359,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
           </div>
 
           {/* ── Right panel: fanart grid ───────────────────────────────────── */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="favs-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {stats.length === 0 ? (
               <div className="empty-state">
                 <FolderOpen size={48} />
