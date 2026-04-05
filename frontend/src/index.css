@@ -1311,6 +1311,8 @@ body {
   .type-right-chips { justify-content: flex-start; }
   .fav-type-row { flex-wrap: wrap; }
   .fav-download-wrap { order: -1; width: 100%; margin-bottom: 4px; }
+  .fav-download-wrap .btn { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+  .fav-download-wrap .btn:hover { background: rgba(245,158,11,0.25); }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
