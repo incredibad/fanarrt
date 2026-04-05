@@ -9,8 +9,6 @@ services:
       - fanarrt-downloads:/app/downloads
     environment:
       - PORT=3579
-      - DATA_DIR=/app/data
-      - DOWNLOADS_DIR=/app/downloads
     restart: unless-stopped
 
   # Watchtower — automatically pulls and restarts fanarrt when a new image is pushed.
