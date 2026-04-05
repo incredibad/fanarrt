@@ -615,6 +615,10 @@ function FavCard({ fav, onRemove, onOpen, collections, activeCollectionId, onTog
         />
       )}
 
+      {fav.media_title && (
+        <div className="fav-title-label">{fav.media_title}</div>
+      )}
+
       <div className="fanart-meta-strip">
         <span className={`fanart-source-chip source-${fav.source.replace('.', '-')}`}>{srcLabel}</span>
         {displayRes && <span className="fanart-res-chip">{displayRes}</span>}
