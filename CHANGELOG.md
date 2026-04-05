@@ -1,66 +1,203 @@
 # Changelog
 
-## v1.2.0
+All notable changes are documented here, newest first.
 
-- Favourites replaced with Collections. Artwork can be saved to named collections; an item can appear in multiple collections simultaneously.
-- Active collection selector in the sidebar, shown when more than one collection exists. Inline creation of new collections directly from the dropdown.
-- Deleting a collection shows a confirmation modal with an item count, then removes only that collection's entries — items in other collections are unaffected.
-- Star icon on fanart cards now has three states: empty (not in active collection), filled (in active collection only), multi-star (in active collection plus at least one other).
-- Collections page (formerly Favourites) reflects the active collection — title, item list, and counts all update when switching collections.
-- Default collection "My Favourites" created automatically on first launch.
+---
 
-## v1.1.11
+## [1.11.0] — 2026-04-06
 
-- Download zip filenames now use the format `title_type_001.jpg` (3-digit zero-padded counter, flat structure with no subdirectories).
+### Security
+- Image proxy now enforces a strict domain allowlist — only known CDN hostnames (TVDB, TMDB, Fanart.tv, AniList) are permitted, preventing SSRF attacks
+- Proxy rejects responses that are not `image/*` content-type; cached files capped at 20 MB
+- Login and account setup endpoints limited to 10 requests per 15 minutes per IP (rate limiting)
+- Session ID is regenerated after successful login and account creation (session fixation fix)
+- Added `helmet` for standard security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, etc.)
+- Removed string interpolation of `collection_id` in library SQL — now fully parameterized
+- Collection names capped at 100 characters on create and rename
+- Removed overly permissive CORS (frontend is served from the same origin in production)
 
-## v1.1.10
+---
 
-- Settings page reorganised into three tabs: Media Servers (Sonarr/Radarr), Providers (TVDB/TMDB/Fanart.tv/priority order), and Account (change password/sign out).
+## [1.10.x] — 2026-03 – 2026-04-05
 
-## v1.1.9
+### Added
+- **Prev/next item navigation** — chevron buttons in the top-right of the item hero let you browse alphabetically through the current library without going back to the list; scoped to whichever library section you came from (All, TV, Movies, Anime) and the active collection
+- **Anime library** — anime split into its own sidebar entry and library page
+- **Anime in favourites filter** — Anime tab added alongside All / TV / Movies on the favourites page
+- **AniList fanart source** — optional toggle in Settings; uses the anime-lists TVDB→MAL mapping for accurate ID lookup, with fuzzy title search as a fallback
+- **Resolution filters** — HD / FHD / 4K filter chips on item and favourites pages; matches exact standard dimensions rather than minimums
+- **Default filters per media type** — configurable default art type, source, and resolution saved per library type in settings
+- **Title on hover in favourites** — media title appears as a small pill overlay (top-left) when hovering a favourite thumbnail; also shown persistently in the lightbox top-left
+- Distinct empty states for "no artwork fetched yet" vs "filters produced no results"
+- Language code badges on fanart thumbnails, with full language name expansion in the lightbox
 
-- Banner thumbnails now use a 16:3 aspect ratio (~5.3:1, matching the typical 758×140 TVDB banner) with object-fit: contain so the full banner is always visible. Banners also get wider grid columns (400px min) so they aren't too short.
+### Changed
+- Filter bar split into two rows — art type tabs on top, provider and resolution chips below
+- Category tabs restyled as larger, more visually distinct chips
+- Section headers (Backgrounds, Posters, Banners, etc.) significantly enlarged with a bottom border separator for easier scanning
+- Collection names in the sidebar truncated at 24 characters with ellipsis; full name shown on hover
+- "No results" empty state icon changed from a star to a Ban (circle-slash) icon
+- Download View button repositioned to the top-right of the filter bar
 
-## v1.1.8
+### Fixed
+- All art type tabs always visible regardless of which types have content
+- Provider filter chips based on which API keys are configured, not which sources happen to have content
+- Active nav item correctly highlighted when navigating from favourites into an item page
+- AniList fanart excluded from results when the AniList toggle is disabled
 
-- Fixed provider order not being respected — settings.get() already JSON-parses the stored value, so calling JSON.parse() again coerced the array to a string and threw a silent error, leaving the order stuck at the hardcoded default. Affected both the settings page load and the fanart sort.
+---
 
-## v1.1.7
+## [1.9.0]
 
-- Library sort now ignores leading "The", "A", and "An" so e.g. "The Wire" sorts under W.
+### Added
+- Per-type provider priority order — configure preferred fanart source order separately for shows, movies, and anime
+- System tab in Settings with a Danger Zone containing purge actions (clear cache, reset fanart data)
+- Settings auto-save on change (no save button required)
 
-## v1.1.6
+---
 
-- Search/filter bar is now sticky on library pages so it remains accessible while scrolling.
+## [1.8.x]
 
-## v1.1.5
+### Added
+- **AniList fanart source** — poster and banner artwork for anime titles via the AniList API
+- Language code badges on fanart thumbnails; full language name shown in the lightbox
+- Download All button on item pages
 
-- Fixed scroll restoration properly — the root cause was a CSS layout issue where .app-layout used min-height instead of height, so .scroll-area was never actually the scroll container (the window was). Changed to height: 100vh so .scroll-area has a bounded height and scrolls correctly.
+### Changed
+- Structured zip download filenames — `title-type-provider-res-lang-001.jpg` format
+- Resolution labels (HD / FHD / 4K) on thumbnails restricted to backgrounds and banners only
 
-## v1.1.4
+### Fixed
+- Auto-fetch triggered correctly when AniList is enabled after the initial fanart fetch
+- Filename counter resets per title in view downloads; counter only increments on actual name collisions
 
-- Fixed scroll position restoration (again) — use useLayoutEffect to restore before the browser paints, and a ref to track scroll position so the value saved on unmount is never stale.
+---
 
-## v1.1.3
+## [1.3.0]
 
-- Fixed scroll position restoration on back navigation — replaced unreliable save-on-unmount with a continuous scroll listener that persists position to sessionStorage.
+### Added
+- Floating refresh FAB on mobile item pages
 
-## v1.1.2
+### Fixed
+- Mobile filter bar spacing and full-width action buttons
+- Hero backdrop uses full-size image with correct cover sizing
+- FAB portalled to document body to escape overflow clipping
 
-- Fixed scroll position not restoring when navigating back to the library list.
+---
 
-## v1.1.1
+## [1.2.1]
 
-- Fixed TMDB badge not appearing on TV show pages — Sonarr's `tmdbId` was being discarded during sync.
+### Changed
+- Flat collection list in the sidebar replaces the previous accordion style
+- Collection rename and delete accessible via a ⋮ menu on the favourites page header
 
-## v1.1.0
+---
 
-- Real-time favourites count in the nav sidebar — increments/decrements instantly when starring or unstarring artwork on the item page or removing from the favourites page, without requiring a full page reload.
-- Favourites page now groups artwork by type (backgrounds, posters, banners, logos, etc.) with correct aspect ratios: 16:9 for backgrounds and banners, 1:1 for logos/clearart/disc/icon/characterart, and 2:3 for everything else.
-- Resolution badges shown on each favourite card; Fanart.tv images use the proxy thumbnail endpoint and read natural dimensions on load when stored dimensions are absent.
+## [1.2.0]
 
-## v1.0.0
+### Added
+- **Collections system** — replaced the single favourites list with multiple named collections; artwork can belong to multiple collections simultaneously
+- Collection picker on thumbnail overlays and the lightbox — add artwork to any collection without switching the active one
+- Inline new collection creation from the sidebar
+- Delete collection confirmation modal showing how many items will be removed
 
-- Initial release.
-- Docker-contained web app for managing fanart for Sonarr/Radarr media libraries.
-- Browse and search your library, fetch artwork from TVDB, TMDB, and Fanart.tv, star favourites, and download them as a zip.
+### Changed
+- Star badges on library cards and item pages reflect the active collection only
+- Active collection highlighted in a distinct amber colour in the sidebar
+- Default collection "My Favourites" created automatically on first launch
+
+---
+
+## [1.1.11]
+
+### Changed
+- Download zip filenames now use the format `title_type_001.jpg` (3-digit zero-padded counter, flat structure)
+
+---
+
+## [1.1.10]
+
+### Changed
+- Settings page reorganised into three tabs: Media Servers, Providers, and Account
+
+---
+
+## [1.1.9]
+
+### Fixed
+- Banner thumbnails use a 16:3 aspect ratio with `object-fit: contain` so the full banner is always visible; wider grid columns for banners
+
+---
+
+## [1.1.8]
+
+### Fixed
+- Provider sort order not being respected — `settings.get()` already JSON-parses stored values; double-parsing was coercing the array to a string silently
+
+---
+
+## [1.1.7]
+
+### Fixed
+- Library sort ignores leading "The", "A", and "An" — e.g. "The Wire" now sorts under W
+
+---
+
+## [1.1.6]
+
+### Fixed
+- Search and filter bar is now sticky on library pages
+
+---
+
+## [1.1.5]
+
+### Fixed
+- Scroll areas now correctly scroll — root cause was `.app-layout` using `min-height` instead of `height`, so the window was the scroll container rather than `.scroll-area`
+
+---
+
+## [1.1.4]
+
+### Fixed
+- Scroll position restoration uses `useLayoutEffect` to restore before browser paint; ref used to track position so the value saved on unmount is never stale
+
+---
+
+## [1.1.3]
+
+### Fixed
+- Scroll position restoration — replaced save-on-unmount with a continuous scroll listener persisting to `sessionStorage`
+
+---
+
+## [1.1.2]
+
+### Fixed
+- Scroll position not restoring when navigating back to the library list
+
+---
+
+## [1.1.1]
+
+### Fixed
+- TMDB badge not appearing on TV show pages — Sonarr's `tmdbId` was being discarded during sync
+
+---
+
+## [1.1.0]
+
+### Added
+- Real-time favourite count in the sidebar — updates instantly when starring or unstarring artwork, without a page reload
+- Favourites page groups artwork by type (backgrounds, posters, banners, logos, etc.) with correct aspect ratios
+- Resolution badges on favourite cards
+
+---
+
+## [1.0.0] — Initial release
+
+- Docker-contained web app for managing fanart for Sonarr and Radarr media libraries
+- Browse and search your library; fetch artwork from TheTVDB, TMDB, and Fanart.tv
+- Star favourites and download them as a ZIP
+- Dark UI with lightbox viewer, type filtering, and letter-jump navigation
+- Poster cache for fast library thumbnail loads
