@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Star, ChevronDown, Check } from 'lucide-react'
+import { Star, Ban, ChevronDown, Check } from 'lucide-react'
 import Lightbox from './Lightbox'
 import { api } from '../api'
 
@@ -284,7 +284,7 @@ export default function FanartGrid({ grouped, onToggleFav, onToggleCollection, a
   if (types.length === 0) {
     return hasContent ? (
       <div className="empty-state">
-        <Star size={40} />
+        <Ban size={40} />
         <h3>No results</h3>
         <p>No artwork matches the current filters. Try selecting a broader filter or "All".</p>
       </div>

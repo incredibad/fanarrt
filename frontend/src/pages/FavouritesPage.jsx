@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Star, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown, ExternalLink } from 'lucide-react'
+import { Star, Ban, Film, Tv, Search, X, Download, FolderOpen, MoreVertical, Pencil, Trash2, Check, ChevronDown, ExternalLink } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 import Lightbox from '../components/Lightbox'
@@ -442,7 +442,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                 <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
                   {gridFavs.length === 0 ? (
                     <div className="empty-state">
-                      <Star size={36} />
+                      <Ban size={36} />
                       {displayedFavs.length > 0 ? (
                         <>
                           <h3>No results</h3>
