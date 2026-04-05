@@ -34,16 +34,6 @@ services:
       - PORT=3579
     restart: unless-stopped
 
-  # Watchtower — automatically pulls and restarts fanarrt when a new image is pushed.
-  # Uncomment to enable. Checks every 6 hours by default.
-  # watchtower:
-  #   image: containrrr/watchtower
-  #   container_name: watchtower-fanarrt
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /root/.docker/config.json:/config.json:ro
-  #   command: --interval 21600 --cleanup fanarrt
-  #   restart: unless-stopped
 
 volumes:
   fanarrt-data:
@@ -75,10 +65,6 @@ Open **http://your-server:3579** — you'll be prompted to create an admin accou
 ```bash
 docker compose pull && docker compose up -d
 ```
-
-### Optional: Auto-updates with Watchtower
-
-Uncomment the `watchtower` section in your `docker-compose.yml` to have the container check for and apply updates automatically every 6 hours.
 
 ---
 
