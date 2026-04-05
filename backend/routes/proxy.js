@@ -96,9 +96,31 @@ function getStoredDimensions(originalUrl) {
   return null;
 }
 
+// Allowlist of hostnames the proxy is permitted to fetch from
+const ALLOWED_HOSTS = new Set([
+  'artworks.thetvdb.com',
+  'image.tmdb.org',
+  'assets.fanart.tv',
+  's4.anilist.co',
+  's1.anilist.co',
+  'img.anili.st',
+  'media.thetvdb.com',
+]);
+
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+
+function isAllowedUrl(urlStr) {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+    return ALLOWED_HOSTS.has(parsed.hostname);
+  } catch { return false; }
+}
+
 async function serveProxied(req, res, cacheDir, detectDimensions) {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url param' });
+  if (!isAllowedUrl(url)) return res.status(403).json({ error: 'URL not permitted' });
 
   // Non-fanart.tv images that aren't in thumb cache: for poster route just proxy anything
   const cachePath = cacheFilePath(cacheDir, url);
@@ -149,7 +171,13 @@ async function serveProxied(req, res, cacheDir, detectDimensions) {
     }
 
     const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.startsWith('image/')) {
+      return res.status(400).json({ error: 'Response is not an image' });
+    }
+    const contentLength = parseInt(upstream.headers.get('content-length') || '0');
+    if (contentLength > MAX_BYTES) return res.status(413).json({ error: 'Image too large' });
     const buf = await upstream.buffer();
+    if (buf.length > MAX_BYTES) return res.status(413).json({ error: 'Image too large' });
 
     let dims = null;
     if (detectDimensions) {

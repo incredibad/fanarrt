@@ -22,8 +22,9 @@ router.get('/', (req, res) => {
 
   const collId = parseInt(collection_id) || null;
   const favJoin = collId
-    ? `LEFT JOIN favourites fav ON fav.media_item_id = mi.id AND fav.collection_id = ${collId}`
+    ? `LEFT JOIN favourites fav ON fav.media_item_id = mi.id AND fav.collection_id = ?`
     : `LEFT JOIN favourites fav ON fav.media_item_id = mi.id`;
+  const joinParams = collId ? [collId] : [];
 
   const offset = (parseInt(page) - 1) * parseInt(limit);
   const total = db.prepare(`SELECT COUNT(*) as c FROM media_items mi WHERE ${where}`).get(...params).c;
@@ -39,7 +40,7 @@ router.get('/', (req, res) => {
     GROUP BY mi.id
     ORDER BY mi.title ASC
     LIMIT ? OFFSET ?
-  `).all(...params, parseInt(limit), offset);
+  `).all(...joinParams, ...params, parseInt(limit), offset);
 
   res.json({ items, total, page: parseInt(page), limit: parseInt(limit) });
 });

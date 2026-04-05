@@ -1,6 +1,15 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const db = require('../db/database');
+const rateLimit = require('express-rate-limit');
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later.' },
+});
 
 const SALT_ROUNDS = 12;
 
@@ -15,7 +24,7 @@ router.get('/status', (req, res) => {
 });
 
 // POST /api/auth/setup — create the first admin account
-router.post('/setup', async (req, res) => {
+router.post('/setup', authLimiter, async (req, res) => {
   const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
   if (userCount > 0) {
     return res.status(400).json({ error: 'Setup already complete. Use login instead.' });
@@ -37,14 +46,17 @@ router.post('/setup', async (req, res) => {
     'INSERT INTO users (username, password_hash) VALUES (?, ?)'
   ).run(username.trim(), hash);
 
-  req.session.userId = result.lastInsertRowid;
-  req.session.username = username.trim();
+  const userId = result.lastInsertRowid;
+  const trimmedUsername = username.trim();
+  await new Promise((resolve, reject) => req.session.regenerate(e => e ? reject(e) : resolve()));
+  req.session.userId = userId;
+  req.session.username = trimmedUsername;
 
-  res.json({ ok: true, username: username.trim() });
+  res.json({ ok: true, username: trimmedUsername });
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });
@@ -63,6 +75,7 @@ router.post('/login', async (req, res) => {
   }
 
   db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+  await new Promise((resolve, reject) => req.session.regenerate(e => e ? reject(e) : resolve()));
   req.session.userId = user.id;
   req.session.username = user.username;
 
