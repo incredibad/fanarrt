@@ -194,7 +194,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
     if (gridFavs.length === 0) return
     const label = selectedItem
       ? selectedItem.title
-      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : 'Movies') : (activeCollection?.name || 'Collection')
+      : typeFilter !== 'all' ? (typeFilter === 'show' ? 'TV_Shows' : typeFilter === 'movie' ? 'Movies' : 'Anime') : (activeCollection?.name || 'Collection')
     setDownloadingView(true)
     try {
       const res = await api.downloadView(gridFavs.map(f => f.fanart_id), label)
@@ -299,12 +299,12 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                     )}
                   </div>
                   <div className="filter-tabs" style={{ padding: 2 }}>
-                    {['all', 'show', 'movie'].map(t => (
+                    {['all', 'show', 'movie', 'anime'].map(t => (
                       <button key={t} className={`filter-tab ${typeFilter === t ? 'active' : ''}`}
                         onClick={() => { setTypeFilter(t); setSelectedId(null) }}
                         style={{ flex: 1, fontSize: 12, padding: '5px 4px' }}
                       >
-                        {t === 'all' ? 'All' : t === 'show' ? 'TV' : 'Movies'}
+                        {t === 'all' ? 'All' : t === 'show' ? 'TV' : t === 'movie' ? 'Movies' : 'Anime'}
                       </button>
                     ))}
                   </div>
