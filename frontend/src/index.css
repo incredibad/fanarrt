@@ -613,25 +613,27 @@ body {
 
 /* Fanart grid */
 .fanart-section-title {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  font-family: var(--font-mono);
-  padding: 16px 32px 8px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  padding: 24px 32px 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 4px;
 }
 
 .fanart-section-title span {
   background: var(--bg-3);
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 10px;
   color: var(--text-2);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 /* fanart-meta-chip — used in lightbox top-left and meta strip */
