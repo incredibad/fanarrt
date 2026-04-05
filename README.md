@@ -1,4 +1,6 @@
-# Fanarrt
+<p align="center">
+  <img src=".github/logo.png" width="380" alt="Fanarrt" />
+</p>
 
 > [!WARNING]
 > This project was built with AI assistance. Code may not meet production safety standards — review carefully before deploying in sensitive environments.
