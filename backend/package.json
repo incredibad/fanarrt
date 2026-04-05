@@ -1,21 +1,22 @@
 {
   "name": "fanart-manager-backend",
-  "version": "1.10.25",
+  "version": "1.11.0",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "better-sqlite3": "^9.4.3",
-    "node-fetch": "^2.7.0",
     "archiver": "^6.0.1",
-    "cors": "^2.8.5",
-    "express-async-errors": "^3.1.1",
-    "dotenv": "^16.4.1",
     "bcrypt": "^5.1.1",
-    "express-session": "^1.18.0"
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^8.3.2",
+    "express-session": "^1.18.0",
+    "helmet": "^8.1.0",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

@@ -18,6 +18,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Name required' });
+  if (name.trim().length > 100) return res.status(400).json({ error: 'Name must be 100 characters or fewer' });
   const result = db.prepare('INSERT INTO collections(name) VALUES(?)').run(name.trim());
   const col = db.prepare('SELECT * FROM collections WHERE id=?').get(result.lastInsertRowid);
   res.json({ ...col, count: 0 });
@@ -36,6 +37,7 @@ router.delete('/:id', (req, res) => {
 router.patch('/:id', (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Name required' });
+  if (name.trim().length > 100) return res.status(400).json({ error: 'Name must be 100 characters or fewer' });
   const result = db.prepare('UPDATE collections SET name=? WHERE id=?').run(name.trim(), req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.json({ ok: true });

@@ -4,9 +4,9 @@ require('express-async-errors');
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const cors = require('cors');
 const crypto = require('crypto');
 const fs = require('fs');
+const helmet = require('helmet');
 
 const { requireAuth } = require('./middleware/auth');
 
@@ -24,7 +24,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
   return secret;
 })();
 
-app.use(cors({ credentials: true }));
+app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled — SPA handles its own assets
 app.use(express.json());
 
 app.use(session({
