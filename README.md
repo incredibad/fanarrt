@@ -1,5 +1,8 @@
 # Fanarrt
 
+> [!WARNING]
+> This project was built with AI assistance. Code may not meet production safety standards — review carefully before deploying in sensitive environments.
+
 A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Radarr media library.
 
 ## Features
