@@ -1310,7 +1310,7 @@ body {
   .type-filter-tabs { justify-content: flex-start; }
   .type-right-chips { justify-content: flex-start; }
   .fav-type-row { flex-wrap: wrap; }
-  .fav-download-wrap { order: -1; width: 100%; }
+  .fav-download-wrap { order: -1; width: 100%; margin-bottom: 4px; }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
