@@ -4,13 +4,14 @@ A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Rada
 
 ## Features
 
-- **Library Sync** — Imports TV shows from Sonarr and movies from Radarr
-- **Fanart Browsing** — Pulls artwork from TheTVDB, TMDB, and Fanart.tv per title
-- **Provider Filtering** — Filter and prioritise artwork by source
-- **Favourites** — Star any artwork to save it as a favourite
-- **Batch Download** — Download favourites as a ZIP: per title, current view, or entire library
+- **Library Sync** — Imports TV shows, movies, and anime from Sonarr and Radarr
+- **Fanart Browsing** — Pulls artwork from TheTVDB, TMDB, Fanart.tv, and AniList per title
+- **Provider & Resolution Filtering** — Filter artwork by source and resolution (HD, FHD, 4K)
+- **Collections** — Organise favourites into multiple named collections
+- **Batch Download** — Download as a ZIP: per title, current filtered view, or entire collection
+- **Item Navigation** — Browse prev/next items alphabetically without returning to the library
 - **Poster Cache** — Library thumbnails cached locally for fast loads
-- **Clean UI** — Dark, modern interface with lightbox viewer, type filtering, and letter jump nav
+- **Clean UI** — Dark, modern interface with lightbox viewer, art type tabs, and letter jump nav
 
 ---
 
