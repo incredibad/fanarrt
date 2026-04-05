@@ -7,6 +7,14 @@
 
 A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Radarr media library.
 
+## Screenshots
+
+<img src=".github/library.png" width="100%" alt="Library" />
+<img src=".github/item-page.png" width="100%" alt="Item page" />
+<img src=".github/favourites.png" width="100%" alt="Favourites" />
+
+---
+
 ## Features
 
 - **Library Sync** — Imports TV shows, movies, and anime from Sonarr and Radarr
