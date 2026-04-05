@@ -154,6 +154,7 @@ body {
 }
 
 .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+.nav-item .nav-label { flex: 1; min-width: 0; }
 
 .nav-badge {
   margin-left: auto;
@@ -1477,7 +1478,7 @@ body {
 }
 
 /* Always show nav labels on desktop */
-.nav-label { display: inline; }
+.nav-label { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .sidebar-logo-text { display: block; }
 
 /* ── Provider / source chips ──────────────────────────────────────────────── */

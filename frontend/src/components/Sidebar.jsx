@@ -91,7 +91,9 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
               onClick={() => handleCollectionClick(col.id)}
             >
               <FolderOpen size={15} />
-              <span className="nav-label">{col.name}</span>
+              <span className="nav-label" title={col.name.length > 24 ? col.name : undefined}>
+                {col.name.length > 24 ? col.name.slice(0, 24) + '…' : col.name}
+              </span>
               {fmt(col.count) && <span className="nav-badge">{fmt(col.count)}</span>}
             </button>
           ))}
