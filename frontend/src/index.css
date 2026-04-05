@@ -1610,14 +1610,15 @@ body {
 
 .fav-title-label {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 20px 8px 8px;
+  top: 8px;
+  left: 8px;
+  max-width: calc(100% - 16px);
+  padding: 3px 7px;
   font-size: 11px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%);
+  background: rgba(0,0,0,0.6);
+  border-radius: 4px;
   pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
