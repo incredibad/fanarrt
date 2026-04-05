@@ -370,7 +370,7 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
               <>
                 <div className="type-filter-bar">
                   {/* Row 1: Art type tabs + Download View */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="fav-type-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div className="type-filter-tabs" style={{ flex: 1 }}>
                       {availableArtTypes.map(t => (
                         <button key={t} className={`filter-tab ${artTypeFilter === t ? 'active' : ''}`}
@@ -385,16 +385,17 @@ export default function FavouritesPage({ onFavCountChange, activeCollection, act
                       ))}
                     </div>
                     {displayedFavs.length > 0 && (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        style={{ flexShrink: 0 }}
-                        onClick={handleDownloadView}
-                        disabled={downloadingView}
-                        title="Download everything currently visible"
-                      >
-                        <Download size={13} />
-                        {downloadingView ? 'Zipping…' : 'Download View'}
-                      </button>
+                      <div className="fav-download-wrap">
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={handleDownloadView}
+                          disabled={downloadingView}
+                          title="Download everything currently visible"
+                        >
+                          <Download size={13} />
+                          {downloadingView ? 'Zipping…' : 'Download View'}
+                        </button>
+                      </div>
                     )}
                   </div>
 

@@ -1307,8 +1307,10 @@ body {
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
   .type-filter-bar { padding: 10px 16px 12px; gap: 8px; }
-  .type-filter-tabs { justify-content: center; }
-  .type-right-chips { justify-content: center; }
+  .type-filter-tabs { justify-content: flex-start; }
+  .type-right-chips { justify-content: flex-start; }
+  .fav-type-row { flex-wrap: wrap; }
+  .fav-download-wrap { order: -1; width: 100%; }
 }
 
 /* ── Auth screens ─────────────────────────────────────────────────────────── */
