@@ -18,9 +18,43 @@ A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Rada
 
 ### Docker Compose (recommended)
 
+Create a `docker-compose.yml` with the following content:
+
+```yaml
+services:
+  fanarrt:
+    image: incredibad/fanarrt:latest
+    container_name: fanarrt
+    ports:
+      - "3579:3579"
+    volumes:
+      - fanarrt-data:/app/data
+      - fanarrt-downloads:/app/downloads
+    environment:
+      - PORT=3579
+      - DATA_DIR=/app/data
+      - DOWNLOADS_DIR=/app/downloads
+    restart: unless-stopped
+
+  # Watchtower — automatically pulls and restarts fanarrt when a new image is pushed.
+  # Uncomment to enable. Checks every 6 hours by default.
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower-fanarrt
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /root/.docker/config.json:/config.json:ro
+  #   command: --interval 21600 --cleanup fanarrt
+  #   restart: unless-stopped
+
+volumes:
+  fanarrt-data:
+  fanarrt-downloads:
+```
+
+Then run:
+
 ```bash
-mkdir fanarrt && cd fanarrt
-curl -O https://raw.githubusercontent.com/incredibad/fanarrt/main/docker-compose.yml
 docker compose up -d
 ```
 
@@ -46,7 +80,7 @@ docker compose pull && docker compose up -d
 
 ### Optional: Auto-updates with Watchtower
 
-Uncomment the `watchtower` section in `docker-compose.yml` to have the container check for and apply updates automatically every 6 hours.
+Uncomment the `watchtower` section in your `docker-compose.yml` to have the container check for and apply updates automatically every 6 hours.
 
 ---
 
