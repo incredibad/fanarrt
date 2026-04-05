@@ -5,7 +5,7 @@
 > [!WARNING]
 > This project was built with AI assistance. Code may not meet production safety standards — review carefully before deploying in sensitive environments.
 
-A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Radarr media library.
+A self-hosted web app that syncs your Sonarr and Radarr library, then lets you browse fanart for your shows, movies, and anime — star your favourites, organise them into collections, and download as ZIP.
 
 ## Screenshots
 
