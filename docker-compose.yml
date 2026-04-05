@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   fanarrt:
     image: incredibad/fanarrt:latest
@@ -10,7 +8,6 @@ services:
       - fanarrt-data:/app/data
       - fanarrt-downloads:/app/downloads
     environment:
-      - NODE_ENV=production
       - PORT=3579
       - DATA_DIR=/app/data
       - DOWNLOADS_DIR=/app/downloads

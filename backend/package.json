@@ -1,6 +1,6 @@
 {
   "name": "fanart-manager-backend",
-  "version": "1.10.20",
+  "version": "1.10.21",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
