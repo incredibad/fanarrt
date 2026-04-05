@@ -140,6 +140,7 @@ export default function Sidebar({ onSync, syncing, counts = {}, collections = []
             <span className="nav-label">{syncing ? 'Syncing…' : 'Sync Library'}</span>
           </button>
           {navItem('/settings', <Settings size={15} />, 'Settings', null)}
+          <div className="sidebar-version">v{__APP_VERSION__}</div>
         </div>
       </aside>
     </>

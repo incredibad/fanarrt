@@ -547,6 +547,13 @@ export default function SettingsPage({ onLogout }) {
       {/* System */}
       {tab === 'system' && (
         <div style={{ padding: '0 32px 32px' }}>
+          <div className="settings-section" style={{ maxWidth: '100%', marginBottom: 24 }}>
+            <div className="settings-section-title">About</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div><span style={{ color: 'var(--text-3)' }}>Version</span> <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>v{__APP_VERSION__}</span></div>
+            </div>
+          </div>
+
           <div className="settings-section" style={{ maxWidth: '100%', borderColor: 'var(--red)', borderWidth: 1, borderStyle: 'solid' }}>
             <div className="settings-section-title" style={{ color: 'var(--red)' }}>
               <AlertTriangle size={14} /> Danger Zone

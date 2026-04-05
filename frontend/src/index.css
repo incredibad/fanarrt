@@ -110,6 +110,14 @@ body {
   border-top: 1px solid var(--border-soft);
 }
 
+.sidebar-version {
+  padding: 6px 10px 2px;
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  opacity: 0.6;
+}
+
 .nav-section-label {
   font-size: 10px;
   font-weight: 600;
