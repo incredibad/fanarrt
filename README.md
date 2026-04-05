@@ -1,6 +1,5 @@
 # Fanarrt
 
-
 A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Radarr media library.
 
 ## Features
@@ -13,71 +12,41 @@ A self-hosted, Docker-contained web app for managing fanart for your Sonarr/Rada
 - **Poster Cache** — Library thumbnails cached locally for fast loads
 - **Clean UI** — Dark, modern interface with lightbox viewer, type filtering, and letter jump nav
 
-## Quick Start (Production)
+---
 
-### 1. On your server — first time only
+## Installation
+
+### Docker Compose (recommended)
 
 ```bash
-# Log in to Docker Hub (needed for private repo — once only)
-docker login -u incredibad
-
-# Create a folder for the compose file
 mkdir fanarrt && cd fanarrt
-
-# Download the compose file
 curl -O https://raw.githubusercontent.com/incredibad/fanarrt/main/docker-compose.yml
-
-# Start
 docker compose up -d
+```
+
+### Docker Run
+
+```bash
+docker run -d \
+  --name fanarrt \
+  --restart unless-stopped \
+  -p 3579:3579 \
+  -v fanarrt-data:/app/data \
+  -v fanarrt-downloads:/app/downloads \
+  incredibad/fanarrt:latest
 ```
 
 Open **http://your-server:3579** — you'll be prompted to create an admin account.
 
-### 2. Updating
+### Updating
 
 ```bash
 docker compose pull && docker compose up -d
 ```
-
-That's it. Your data (database, image cache) is in Docker volumes and is unaffected by updates.
 
 ### Optional: Auto-updates with Watchtower
 
 Uncomment the `watchtower` section in `docker-compose.yml` to have the container check for and apply updates automatically every 6 hours.
-
----
-
-## Development
-
-### Prerequisites
-- Node.js 20+
-- Docker + Docker Compose
-
-### Local dev server (hot reload)
-
-```bash
-# Terminal 1 — backend
-cd backend && npm install && npm run dev
-
-# Terminal 2 — frontend (proxies /api to localhost:3579)
-cd frontend && npm install && npm run dev
-```
-
-Frontend dev server runs on port 5173.
-
-### Build and test with Docker locally
-
-```bash
-docker compose -f docker-compose.dev.yml up -d --build
-```
-
-### Deploying changes
-
-Push to `main` on GitHub — the Actions workflow builds and pushes to Docker Hub automatically (~3 min). Then on your server:
-
-```bash
-docker compose pull && docker compose up -d
-```
 
 ---
 
@@ -102,19 +71,6 @@ docker compose pull && docker compose up -d
 
 ---
 
-## GitHub Actions Setup (for contributors / forks)
-
-Add these secrets to your GitHub repo (Settings → Secrets → Actions):
-
-| Secret | Value |
-|---|---|
-| `DOCKERHUB_USERNAME` | Your Docker Hub username |
-| `DOCKERHUB_TOKEN` | Docker Hub access token (Account Settings → Security) |
-
-The workflow triggers on every push to `main` and tags images as both `latest` and the git short SHA.
-
----
-
 ## Data Persistence
 
 | Volume | Contents |
@@ -123,6 +79,8 @@ The workflow triggers on every push to `main` and tags images as both `latest` a
 | `fanarrt-downloads` | Reserved for future use |
 
 Volumes survive `docker compose pull && docker compose up -d` updates.
+
+---
 
 ## Tech Stack
 
