@@ -129,6 +129,10 @@ export default function Lightbox({ image, isFavourite, onClose, onToggleFav, col
         <X size={18} />
       </button>
 
+      {itemTitle && (
+        <div className="lightbox-item-title">{itemTitle}</div>
+      )}
+
       <img
         className="lightbox-img"
         src={image.url}

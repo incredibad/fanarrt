@@ -1208,6 +1208,25 @@ body {
 
 .lightbox-close:hover { background: rgba(255,255,255,0.2); }
 
+.lightbox-item-title {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  max-width: 40vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 .lightbox-actions {
   position: absolute;
   bottom: 24px;
@@ -1588,6 +1607,27 @@ body {
 }
 
 .fanart-item:hover .fanart-overlay { opacity: 1; }
+
+.fav-title-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 8px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 2;
+}
+
+.fanart-item:hover .fav-title-label { opacity: 1; }
 
 .fanart-action-btn {
   width: 30px;
