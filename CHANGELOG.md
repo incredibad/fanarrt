@@ -4,6 +4,13 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.12.5] — 2026-04-06
+
+### Removed
+- Sonarr/Radarr instance badge from item hero (shown without a link — will be re-added properly with deep links in a future release; see TODO #12)
+
+---
+
 ## [1.12.4] — 2026-04-06
 
 ### Added
