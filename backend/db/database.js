@@ -137,6 +137,10 @@ try {
   db.exec(`ALTER TABLE media_items ADD COLUMN anilist_id INTEGER`);
 } catch {}
 
+// Add TOTP columns to users
+try { db.exec(`ALTER TABLE users ADD COLUMN totp_secret TEXT`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0`); } catch {}
+
 // Fix the source CHECK constraint to include 'fanart.tv' and 'anilist'
 const fanartTableSql = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='fanart'`).get();
 if (fanartTableSql && (!fanartTableSql.sql.includes("'fanart.tv'") || !fanartTableSql.sql.includes("'anilist'"))) {

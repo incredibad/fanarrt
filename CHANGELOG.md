@@ -4,6 +4,16 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.13.0] — 2026-04-06
+
+### Added
+- TOTP two-factor authentication — enable/disable from Settings → Account tab (off by default)
+- Login shows a TOTP code step when 2FA is enabled; pending session pattern prevents access until code is verified
+- QR code + manual key shown during setup; password confirmation required to disable
+- DB migration: `totp_secret` and `totp_enabled` columns added to `users`
+
+---
+
 ## [1.12.7] — 2026-04-06
 
 ### Changed

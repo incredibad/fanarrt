@@ -1,6 +1,6 @@
 {
   "name": "fanart-manager-backend",
-  "version": "1.12.7",
+  "version": "1.13.0",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
@@ -16,7 +16,9 @@
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.18.0",
     "helmet": "^8.1.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "otplib": "^13.4.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

@@ -23,6 +23,11 @@ export const api = {
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   changePassword: (currentPassword, newPassword) =>
     apiFetch('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+  getTotpStatus: () => apiFetch('/auth/totp/status'),
+  setupTotp: () => apiFetch('/auth/totp/setup', { method: 'POST' }),
+  verifyTotpSetup: (code) => apiFetch('/auth/totp/verify-setup', { method: 'POST', body: JSON.stringify({ code }) }),
+  disableTotp: (password) => apiFetch('/auth/totp/disable', { method: 'POST', body: JSON.stringify({ password }) }),
+  verifyLoginTotp: (code) => apiFetch('/auth/totp/verify-login', { method: 'POST', body: JSON.stringify({ code }) }),
 
   // Settings
   getSettings: () => apiFetch('/settings'),

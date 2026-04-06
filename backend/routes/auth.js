@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
+const { authenticator } = require('otplib');
+const QRCode = require('qrcode');
 const db = require('../db/database');
 const rateLimit = require('express-rate-limit');
 
@@ -74,12 +76,94 @@ router.post('/login', authLimiter, async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
 
+  // If TOTP is enabled, create a pending session instead of a full one
+  if (user.totp_enabled) {
+    await new Promise((resolve, reject) => req.session.regenerate(e => e ? reject(e) : resolve()));
+    req.session.pendingUserId = user.id;
+    req.session.pendingUsername = user.username;
+    return res.json({ ok: true, requiresTotp: true });
+  }
+
   db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
   await new Promise((resolve, reject) => req.session.regenerate(e => e ? reject(e) : resolve()));
   req.session.userId = user.id;
   req.session.username = user.username;
 
   res.json({ ok: true, username: user.username });
+});
+
+// POST /api/auth/totp/verify-login — complete login when TOTP is required
+router.post('/totp/verify-login', authLimiter, async (req, res) => {
+  if (!req.session?.pendingUserId) {
+    return res.status(401).json({ error: 'No pending login session.' });
+  }
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'TOTP code is required.' });
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.pendingUserId);
+  if (!user || !user.totp_secret) {
+    return res.status(401).json({ error: 'Invalid session.' });
+  }
+
+  const valid = authenticator.check(code.replace(/\s/g, ''), user.totp_secret);
+  if (!valid) return res.status(401).json({ error: 'Invalid or expired code.' });
+
+  const userId = user.id;
+  const username = user.username;
+  db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(userId);
+  await new Promise((resolve, reject) => req.session.regenerate(e => e ? reject(e) : resolve()));
+  req.session.userId = userId;
+  req.session.username = username;
+
+  res.json({ ok: true, username });
+});
+
+// GET /api/auth/totp/status — get TOTP enabled state for the current user
+router.get('/totp/status', (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: 'Not authenticated.' });
+  const user = db.prepare('SELECT totp_enabled FROM users WHERE id = ?').get(req.session.userId);
+  res.json({ enabled: !!(user?.totp_enabled) });
+});
+
+// POST /api/auth/totp/setup — generate a new secret and QR code (stored in session until verified)
+router.post('/totp/setup', async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: 'Not authenticated.' });
+  const user = db.prepare('SELECT username FROM users WHERE id = ?').get(req.session.userId);
+  const secret = authenticator.generateSecret();
+  req.session.pendingTotpSecret = secret;
+  const otpauth = authenticator.keyuri(user.username, 'Fanarrt', secret);
+  const qrDataUrl = await QRCode.toDataURL(otpauth);
+  res.json({ secret, qrDataUrl });
+});
+
+// POST /api/auth/totp/verify-setup — verify a code against the pending secret and enable TOTP
+router.post('/totp/verify-setup', (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: 'Not authenticated.' });
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'TOTP code is required.' });
+  const secret = req.session.pendingTotpSecret;
+  if (!secret) return res.status(400).json({ error: 'No setup in progress. Start setup first.' });
+
+  const valid = authenticator.check(code.replace(/\s/g, ''), secret);
+  if (!valid) return res.status(401).json({ error: 'Invalid or expired code. Try again.' });
+
+  db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?').run(secret, req.session.userId);
+  delete req.session.pendingTotpSecret;
+  res.json({ ok: true });
+});
+
+// POST /api/auth/totp/disable — disable TOTP (requires current password confirmation)
+router.post('/totp/disable', async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: 'Not authenticated.' });
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Password is required to disable TOTP.' });
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) return res.status(401).json({ error: 'Incorrect password.' });
+
+  db.prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?').run(req.session.userId);
+  res.json({ ok: true });
 });
 
 // POST /api/auth/logout
