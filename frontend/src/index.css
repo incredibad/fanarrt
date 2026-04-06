@@ -1307,8 +1307,7 @@ body {
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
   .item-download-row { display: flex; gap: 8px; width: 100%; }
-  .item-download-row .btn { flex: 1; width: auto; background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
-  .item-download-row .btn:hover { background: rgba(245,158,11,0.25); }
+  .item-download-row .btn { flex: 1; width: auto; }
   .type-filter-tabs { justify-content: flex-start; }
   .type-right-chips { justify-content: flex-start; }
 }
@@ -1885,11 +1884,13 @@ body {
 
 /* ── Download View button — yellow everywhere ────────────────────────────── */
 
+.item-download-row .btn,
 .fav-download-btn {
   background: rgba(245,158,11,0.15);
   color: #fbbf24;
   border-color: rgba(251,191,36,0.3);
 }
+.item-download-row .btn:hover,
 .fav-download-btn:hover { background: rgba(245,158,11,0.25); }
 
 .favs-item-link { opacity: 0.5; transition: opacity 0.15s, background 0.15s; }
