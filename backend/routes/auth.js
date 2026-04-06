@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
-const { authenticator } = require('otplib');
 const QRCode = require('qrcode');
+const totp = require('../utils/totp');
 const db = require('../db/database');
 const rateLimit = require('express-rate-limit');
 
@@ -105,7 +105,7 @@ router.post('/totp/verify-login', authLimiter, async (req, res) => {
     return res.status(401).json({ error: 'Invalid session.' });
   }
 
-  const valid = authenticator.check(code.replace(/\s/g, ''), user.totp_secret);
+  const valid = totp.verifyToken(code.replace(/\s/g, ''), user.totp_secret);
   if (!valid) return res.status(401).json({ error: 'Invalid or expired code.' });
 
   const userId = user.id;
@@ -129,9 +129,9 @@ router.get('/totp/status', (req, res) => {
 router.post('/totp/setup', async (req, res) => {
   if (!req.session?.userId) return res.status(401).json({ error: 'Not authenticated.' });
   const user = db.prepare('SELECT username FROM users WHERE id = ?').get(req.session.userId);
-  const secret = authenticator.generateSecret();
+  const secret = totp.generateSecret();
   req.session.pendingTotpSecret = secret;
-  const otpauth = authenticator.keyuri(user.username, 'Fanarrt', secret);
+  const otpauth = totp.generateUri(secret, user.username);
   const qrDataUrl = await QRCode.toDataURL(otpauth);
   res.json({ secret, qrDataUrl });
 });
@@ -144,7 +144,7 @@ router.post('/totp/verify-setup', (req, res) => {
   const secret = req.session.pendingTotpSecret;
   if (!secret) return res.status(400).json({ error: 'No setup in progress. Start setup first.' });
 
-  const valid = authenticator.check(code.replace(/\s/g, ''), secret);
+  const valid = totp.verifyToken(code.replace(/\s/g, ''), secret);
   if (!valid) return res.status(401).json({ error: 'Invalid or expired code. Try again.' });
 
   db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?').run(secret, req.session.userId);
