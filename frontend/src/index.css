@@ -1302,10 +1302,13 @@ body {
   .page-header, .filter-bar, .stats-row { padding-left: 16px; padding-right: 16px; }
   .fanart-grid { padding-left: 16px; padding-right: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .item-hero { flex-direction: row; align-items: center; padding: 16px; gap: 14px; }
-  .item-hero-poster { width: 72px; height: 108px; }
+  .item-hero-poster { display: none; }
   .item-hero-actions { margin-top: 10px; }
   .item-hero-actions .btn { width: 100%; justify-content: center; }
   .item-refresh-btn { display: none; }
+  .item-download-row { display: flex; gap: 8px; width: 100%; }
+  .item-download-row .btn { flex: 1; width: auto; background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+  .item-download-row .btn:hover { background: rgba(245,158,11,0.25); }
   .type-filter-tabs { justify-content: flex-start; }
   .type-right-chips { justify-content: flex-start; }
 }
