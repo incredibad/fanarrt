@@ -132,6 +132,11 @@ try {
   db.exec(`ALTER TABLE media_items ADD COLUMN fanart_fetched_at DATETIME`);
 } catch {}
 
+// Add anilist_id column if it doesn't exist yet
+try {
+  db.exec(`ALTER TABLE media_items ADD COLUMN anilist_id INTEGER`);
+} catch {}
+
 // Fix the source CHECK constraint to include 'fanart.tv' and 'anilist'
 const fanartTableSql = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='fanart'`).get();
 if (fanartTableSql && (!fanartTableSql.sql.includes("'fanart.tv'") || !fanartTableSql.sql.includes("'anilist'"))) {

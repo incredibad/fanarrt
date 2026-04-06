@@ -4,6 +4,23 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.12.4] — 2026-04-06
+
+### Added
+- AniList badge link in the item hero for anime — shown when AniList is enabled in settings; the AniList ID is stored on first fanart fetch (or next auto-refresh for existing items)
+
+### Changed
+- DB migration: `anilist_id` column added to `media_items`; populated automatically when AniList fanart is fetched
+
+---
+
+## [1.12.3] — 2026-04-06
+
+### Changed
+- Backfilled CHANGELOG for versions 1.11.6–1.12.2; added changelog update rule to CLAUDE.md
+
+---
+
 ## [1.12.2] — 2026-04-06
 
 ### Fixed

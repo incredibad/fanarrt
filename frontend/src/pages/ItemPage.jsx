@@ -10,7 +10,7 @@ import { toast } from '../hooks/useToast'
 const PROVIDER_LABELS = { tvdb: 'TVDB', tmdb: 'TMDB', 'fanart.tv': 'Fanart.tv', anilist: 'AniList' }
 
 // Build external provider links shown in hero tags
-function providerLinks(item) {
+function providerLinks(item, settings) {
   const links = []
   // TVDB: dereferrer URL uses numeric ID and works for both shows and movies
   if (item.tvdb_id) links.push({
@@ -44,6 +44,12 @@ function providerLinks(item) {
     label: 'Fanart.tv', source: 'fanart.tv',
     url: `https://fanart.tv/movie/${item.tmdb_id}/`,
     display: 'Fanart.tv',
+  })
+  // AniList: only when enabled in settings and ID has been fetched
+  if (item.anilist_id && settings.anilist_enabled !== false) links.push({
+    label: 'AniList', source: 'anilist',
+    url: `https://anilist.co/anime/${item.anilist_id}`,
+    display: `AniList ${item.anilist_id}`,
   })
   return links
 }
@@ -274,7 +280,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
     if (filtered.length > 0) filteredGrouped[type] = filtered
   }
 
-  const idLinks = providerLinks(item)
+  const idLinks = providerLinks(item, settings)
 
   const currentSiblingIdx = siblings.findIndex(s => String(s.id) === String(id))
   const prevSibling = currentSiblingIdx > 0 ? siblings[currentSiblingIdx - 1] : null

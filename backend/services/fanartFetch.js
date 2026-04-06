@@ -275,6 +275,10 @@ function insertAniListFanart(media, malId, mediaItemId) {
       media.bannerImage, media.bannerImage, null, null, null, 0);
     count++;
   }
+  // Store the AniList ID on the media item so the frontend can link to it
+  if (media.id) {
+    db.prepare(`UPDATE media_items SET anilist_id = ? WHERE id = ?`).run(media.id, mediaItemId);
+  }
   return count;
 }
 
@@ -286,7 +290,7 @@ async function fetchAniListFanart(tvdbId, malIdFromRemote, title, mediaItemId) {
 
     if (malId) {
       const json = await anilistQuery(
-        `query($idMal:Int){Media(idMal:$idMal,type:ANIME){coverImage{extraLarge large}bannerImage}}`,
+        `query($idMal:Int){Media(idMal:$idMal,type:ANIME){id coverImage{extraLarge large}bannerImage}}`,
         { idMal: parseInt(malId) }
       );
       const media = json.data?.Media;
