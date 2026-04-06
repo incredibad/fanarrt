@@ -9,6 +9,9 @@ services:
       - fanarrt-downloads:/app/downloads
     environment:
       - PORT=3579
+      # Uncomment if serving behind an HTTPS reverse proxy (Nginx, Caddy, Traefik).
+      # Marks session cookies as Secure so they are never sent over plain HTTP.
+      # - SECURE_COOKIES=1
     restart: unless-stopped
 
 volumes:
