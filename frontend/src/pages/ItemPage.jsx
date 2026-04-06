@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Star, Film, Tv, Zap, AlertTriangle, Download } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, Star, Film, Tv, Zap, AlertTriangle, Download } from 'lucide-react'
 import { api } from '../api'
 import FanartGrid, { TYPE_ORDER } from '../components/FanartGrid'
 import DownloadMenu from '../components/DownloadMenu'
@@ -89,6 +89,7 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
   const [imgError, setImgError] = useState(false)
   const [favCount, setFavCount] = useState(0)
   const didAutoFetch = useRef(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Fetch sibling items for prev/next navigation — scoped to the library the user came from
   useEffect(() => {
@@ -388,13 +389,17 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
               <RefreshCw size={13} style={{ animation: (fetching||autoFetching) ? 'spin 0.7s linear infinite' : 'none' }} />
               {fetching ? 'Fetching…' : autoFetching ? 'Auto-fetching…' : fanartData.total > 0 ? 'Refresh Fanart' : 'Fetch Fanart'}
             </button>
-            {fanartData.total > 0 && (
-              <a className="btn btn-secondary btn-sm" href={api.downloadUrl.itemAll(item.id)} download>
-                <Download size={13} />
-                Download All
-              </a>
+            {(fanartData.total > 0 || favCount > 0) && (
+              <div className="item-download-row">
+                {fanartData.total > 0 && (
+                  <a className="btn btn-secondary btn-sm" href={api.downloadUrl.itemAll(item.id)} download>
+                    <Download size={13} />
+                    Download All
+                  </a>
+                )}
+                {favCount > 0 && <DownloadMenu mediaItemId={item.id} />}
+              </div>
             )}
-            {favCount > 0 && <DownloadMenu mediaItemId={item.id} />}
           </div>
         </div>
       </div>
@@ -402,59 +407,68 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
       {/* Type + provider + resolution filter bar */}
       {fanartData.total > 0 && (
         <div className="type-filter-bar">
-          {/* Row 1: Art type tabs */}
-          <div className="type-filter-tabs">
-            {availableTypes.map(t => (
-              <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
-                onClick={() => setActiveType(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-                {t !== 'all' && fanartData.grouped[t] && (
-                  <span style={{ marginLeft:4, opacity:0.6 }}>
-                    ({fanartData.grouped[t].length})
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          {/* Mobile accordion header */}
+          <button className="fav-accordion-header" onClick={() => setFiltersOpen(o => !o)}>
+            <span>Filters</span>
+            <span className={`fav-accordion-chevron${filtersOpen ? ' open' : ''}`}><ChevronDown size={14} /></span>
+          </button>
 
-          {/* Row 2: Provider + resolution filter chips */}
-          <div className="type-right-chips">
-            {enabledSources.length > 1 && (
-              <div className="type-provider-chips">
-                <button
-                  className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
-                  onClick={() => setActiveSource('all')}
-                  style={{ cursor:'pointer', border:'none', fontSize:10 }}
-                >
-                  All
+          {/* Filter content */}
+          <div className={`fav-accordion-body filters-accordion-body${filtersOpen ? ' open' : ''}`}>
+            {/* Row 1: Art type tabs */}
+            <div className="type-filter-tabs">
+              {availableTypes.map(t => (
+                <button key={t} className={`filter-tab ${activeType === t ? 'active' : ''}`}
+                  onClick={() => setActiveType(t)}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                  {t !== 'all' && fanartData.grouped[t] && (
+                    <span style={{ marginLeft:4, opacity:0.6 }}>
+                      ({fanartData.grouped[t].length})
+                    </span>
+                  )}
                 </button>
-                {enabledSources.map(src => (
-                  <button key={src}
-                    className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
-                    onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
+              ))}
+            </div>
+
+            {/* Row 2: Provider + resolution filter chips */}
+            <div className="type-right-chips">
+              {enabledSources.length > 1 && (
+                <div className="type-provider-chips">
+                  <button
+                    className={`fanart-source-chip source-all ${activeSource === 'all' ? 'source-active' : ''}`}
+                    onClick={() => setActiveSource('all')}
                     style={{ cursor:'pointer', border:'none', fontSize:10 }}
-                    title={`Show only ${PROVIDER_LABELS[src] || src}`}
                   >
-                    {PROVIDER_LABELS[src] || src} ({fanartData.fanart?.filter(f => f.source === src).length})
+                    All
                   </button>
+                  {enabledSources.map(src => (
+                    <button key={src}
+                      className={`fanart-source-chip source-${src.replace('.', '-')} ${activeSource === src ? 'source-active' : ''}`}
+                      onClick={() => setActiveSource(activeSource === src ? 'all' : src)}
+                      style={{ cursor:'pointer', border:'none', fontSize:10 }}
+                      title={`Show only ${PROVIDER_LABELS[src] || src}`}
+                    >
+                      {PROVIDER_LABELS[src] || src} ({fanartData.fanart?.filter(f => f.source === src).length})
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {enabledSources.length > 1 && (
+                <div className="filter-chip-divider" />
+              )}
+
+              <div className="type-res-chips">
+                <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setResFilter('all')}>All</button>
+                {RES_TIERS.map(tier => (
+                  <button key={tier.id}
+                    className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
+                    onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
+                    title={`${tier.w}×${tier.h} only`}
+                  >{tier.label}</button>
                 ))}
               </div>
-            )}
-
-            {enabledSources.length > 1 && (
-              <div className="filter-chip-divider" />
-            )}
-
-            <div className="type-res-chips">
-              <button className={`res-chip ${resFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setResFilter('all')}>All</button>
-              {RES_TIERS.map(tier => (
-                <button key={tier.id}
-                  className={`res-chip ${resFilter === tier.id ? 'active' : ''}`}
-                  onClick={() => setResFilter(resFilter === tier.id ? 'all' : tier.id)}
-                  title={`${tier.w}×${tier.h} only`}
-                >{tier.label}</button>
-              ))}
             </div>
           </div>
         </div>
