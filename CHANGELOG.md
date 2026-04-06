@@ -4,6 +4,42 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.12.2] — 2026-04-06
+
+### Fixed
+- Download All and Download Favourites buttons on the item page are now amber/yellow on desktop as well as mobile
+
+---
+
+## [1.12.1] — 2026-04-06
+
+### Fixed
+- Mobile item page: poster hidden in the hero header to free up space for title and actions
+- Download All and Download Favourites sit side-by-side at 50 % width each on mobile, styled in amber/yellow
+- Filters on the item page collapse into an accordion on mobile (default closed), matching the favourites page behaviour
+
+---
+
+## [1.12.0] — 2026-04-06
+
+### Added
+- Collapsible **Titles** and **Filters** accordions on the favourites page for mobile — both default to closed, with chevron-in-circle icons that rotate on expand; Download View button always visible below the accordions
+- Download View button styled in amber/yellow on all screen sizes
+
+### Fixed
+- Fanart grid was invisible in favourites on mobile — the sidebar's `width: 100%` rule was collapsing the grid panel to zero width in the row-flex layout; fixed by switching to a column layout on mobile
+- Filter chips on the favourites page are now left-aligned on mobile (were centred)
+- Download View button moved above the filter chip rows on mobile for easier reach
+
+---
+
+## [1.11.6] — 2026-04-06
+
+### Added
+- App version number displayed in the sidebar footer and on the Settings → System tab
+
+---
+
 ## [1.11.0] — 2026-04-06
 
 ### Security
