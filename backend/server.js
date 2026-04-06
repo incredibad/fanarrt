@@ -27,13 +27,18 @@ const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
 app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled — SPA handles its own assets
 app.use(express.json());
 
+// Trust reverse proxies (Nginx, Caddy, Traefik) so that rate-limiting and
+// secure-cookie detection use the real client IP / protocol, not the proxy's.
+app.set('trust proxy', 1);
+
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // set true if terminating HTTPS at a reverse proxy
+    // Enable when serving behind an HTTPS reverse proxy: set SECURE_COOKIES=1
+    secure: process.env.SECURE_COOKIES === '1',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     sameSite: 'lax',
   },
@@ -57,10 +62,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC, 'index.html'));
 });
 
-// Error handler
+// Error handler — log internally, never expose implementation details to the client
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {

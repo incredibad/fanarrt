@@ -4,6 +4,15 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.12.6] — 2026-04-06
+
+### Security
+- Added `SECURE_COOKIES=1` environment variable: when set, session cookies are flagged `Secure` so browsers never transmit them over plain HTTP — recommended for deployments behind an HTTPS reverse proxy (Nginx, Caddy, Traefik)
+- Added `trust proxy` so the real client IP (from `X-Forwarded-For`) is used for rate-limiting rather than the proxy's IP
+- Global error handler no longer echoes internal error messages or stack traces to the client; errors are logged server-side only
+
+---
+
 ## [1.12.5] — 2026-04-06
 
 ### Removed
