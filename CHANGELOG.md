@@ -4,6 +4,13 @@ All notable changes are documented here, newest first.
 
 ---
 
+## [1.12.7] — 2026-04-06
+
+### Changed
+- README: expanded AI disclaimer with author's note on intent, security auditing, and recommended precautions for security-conscious users
+
+---
+
 ## [1.12.6] — 2026-04-06
 
 ### Security

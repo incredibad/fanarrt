@@ -4,6 +4,8 @@
 
 > [!WARNING]
 > This project was built with AI assistance. Code may not meet production safety standards — review carefully before deploying in sensitive environments.
+>
+> **Note from the author:** This was made as a personal tool, and I'd like to share it with the community. I understand that AI can be both controversial and fallible. I have followed the AI coding and updates with security in mind, and have done multiple audits to try and find vulnerabilities and security leaks. However, there is always the risk of bad things happening — if you are security conscious or dubious, keep the app on your local network only, and/or behind a third-party auth app.
 
 A self-hosted web app that syncs your Sonarr and Radarr library, then lets you browse fanart for your shows, movies, and anime — star your favourites, organise them into collections, and download as ZIP.
 
