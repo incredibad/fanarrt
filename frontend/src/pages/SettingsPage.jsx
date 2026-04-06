@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil, LayoutGrid } from 'lucide-react'
+import { AlertTriangle, Zap, Loader, LogOut, KeyRound, Server, Database, User, Plus, Trash2, Pencil, LayoutGrid, ShieldCheck, ShieldOff } from 'lucide-react'
 import { api } from '../api'
 import { toast } from '../hooks/useToast'
 
@@ -529,6 +529,7 @@ export default function SettingsPage({ onLogout }) {
         <div style={{ padding: '0 32px 32px' }}>
           <div className="settings-grid">
             <ChangePasswordSection />
+            <TotpSection />
             <div className="settings-section">
               <div className="settings-section-title">
                 <LogOut size={14} /> Sign Out
@@ -828,6 +829,167 @@ function ChangePasswordSection() {
           {saving ? 'Saving…' : 'Change Password'}
         </button>
       </form>
+    </div>
+  )
+}
+
+// ── TOTP two-factor authentication ─────────────────────────────────────────────
+
+function TotpSection() {
+  const [enabled, setEnabled] = useState(null) // null = loading
+  const [flow, setFlow] = useState('idle') // 'idle' | 'setup' | 'disable'
+  const [qrDataUrl, setQrDataUrl] = useState('')
+  const [secret, setSecret] = useState('')
+  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api.getTotpStatus().then(r => setEnabled(r.enabled)).catch(() => setEnabled(false))
+  }, [])
+
+  const startSetup = async () => {
+    setSaving(true)
+    try {
+      const res = await api.setupTotp()
+      setQrDataUrl(res.qrDataUrl)
+      setSecret(res.secret)
+      setCode('')
+      setFlow('setup')
+    } catch (err) {
+      toast(err.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const confirmSetup = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.verifyTotpSetup(code)
+      toast('Two-factor authentication enabled', 'success')
+      setEnabled(true)
+      setFlow('idle')
+      setCode(''); setSecret(''); setQrDataUrl('')
+    } catch (err) {
+      toast(err.message, 'error')
+      setCode('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const confirmDisable = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.disableTotp(password)
+      toast('Two-factor authentication disabled', 'success')
+      setEnabled(false)
+      setFlow('idle')
+      setPassword('')
+    } catch (err) {
+      toast(err.message, 'error')
+      setPassword('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (enabled === null) return null
+
+  return (
+    <div className="settings-section">
+      <div className="settings-section-title">
+        <ShieldCheck size={14} /> Two-Factor Authentication
+      </div>
+
+      {flow === 'idle' && (
+        <>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 16, lineHeight: 1.6 }}>
+            {enabled
+              ? 'TOTP two-factor authentication is currently enabled. You will need your authenticator app each time you sign in.'
+              : 'Add an extra layer of security by requiring a time-based one-time password from an authenticator app on sign-in.'}
+          </p>
+          {enabled ? (
+            <button className="btn btn-danger btn-sm" onClick={() => { setPassword(''); setFlow('disable') }}>
+              <ShieldOff size={13} /> Disable 2FA
+            </button>
+          ) : (
+            <button className="btn btn-secondary btn-sm" onClick={startSetup} disabled={saving}>
+              {saving ? 'Loading…' : <><ShieldCheck size={13} /> Enable 2FA</>}
+            </button>
+          )}
+        </>
+      )}
+
+      {flow === 'setup' && (
+        <form onSubmit={confirmSetup}>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12, lineHeight: 1.6 }}>
+            Scan the QR code with your authenticator app (e.g. Google Authenticator, Authy, Bitwarden), then enter the 6-digit code to confirm.
+          </p>
+          {qrDataUrl && (
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+              <img src={qrDataUrl} alt="TOTP QR code" style={{ width: 160, height: 160, imageRendering: 'pixelated', borderRadius: 8, background: '#fff', padding: 8 }} />
+            </div>
+          )}
+          <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 12, lineHeight: 1.6, textAlign: 'center' }}>
+            Can't scan? Enter this key manually:<br />
+            <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-2)', letterSpacing: '0.1em', wordBreak: 'break-all' }}>{secret}</code>
+          </p>
+          <div className="form-field">
+            <label className="form-label">Authenticator Code</label>
+            <input
+              className="form-input"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="000000"
+              autoComplete="one-time-code"
+              required
+              style={{ letterSpacing: '0.2em', fontSize: 18, textAlign: 'center' }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="submit" className="btn btn-secondary btn-sm" disabled={saving || code.length < 6}>
+              {saving ? 'Verifying…' : 'Verify & Enable'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setFlow('idle'); setCode(''); setSecret(''); setQrDataUrl('') }}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {flow === 'disable' && (
+        <form onSubmit={confirmDisable}>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12, lineHeight: 1.6 }}>
+            Enter your current password to confirm you want to disable two-factor authentication.
+          </p>
+          <div className="form-field">
+            <label className="form-label">Current Password</label>
+            <input
+              className="form-input"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="submit" className="btn btn-danger btn-sm" disabled={saving || !password}>
+              {saving ? 'Disabling…' : 'Confirm Disable'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setFlow('idle'); setPassword('') }}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   )
 }
