@@ -370,17 +370,6 @@ export default function ItemPage({ onFavCountChange, activeCollectionId, collect
                 {favCount} in collection
               </span>
             )}
-            {item.sources?.length === 1 && (
-              <span className="tag source-badge">
-                {item.sources[0].instance_label}
-              </span>
-            )}
-            {item.sources?.length > 1 && (
-              <span className="tag source-badge source-badge-shared"
-                title={item.sources.map(s => s.instance_label).join(', ')}>
-                In {item.sources.length} instances
-              </span>
-            )}
             {item.type_conflict && (
               <span className="source-conflict-icon"
                 title="This item's type classification differs between instances — the most recently synced value is shown.">
